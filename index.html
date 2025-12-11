@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>避障遊戲 - 躲避越多越高分</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1000px;
+            width: 100%;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #00ffcc;
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            color: #aaa;
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 15px;
+            background-color: rgba(20, 20, 30, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .score-container, .high-score-container {
+            text-align: center;
+        }
+        
+        .score-label, .high-score-label {
+            font-size: 1.1rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .score-value, .high-score-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ffcc;
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+        }
+        
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 150, 255, 0.2);
+            border: 2px solid #222;
+        }
+        
+        #gameCanvas {
+            background-color: #000;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-top: 25px;
+        }
+        
+        .instructions {
+            background-color: rgba(20, 20, 30, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            width: 48%;
+            border: 1px solid #333;
+        }
+        
+        .instructions h3 {
+            color: #00ffcc;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .instructions p {
+            color: #ccc;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .key {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 0 3px;
+        }
+        
+        .game-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 48%;
+            background-color: rgba(20, 20, 30, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .start-btn {
+            background: linear-gradient(to bottom, #00cc99, #009973);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 204, 153, 0.3);
+        }
+        
+        .start-btn:hover {
+            background: linear-gradient(to bottom, #00ffcc, #00cc99);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 204, 153, 0.4);
+        }
+        
+        .start-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .difficulty {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            color: #ccc;
+        }
+        
+        .difficulty label {
+            margin-right: 15px;
+        }
+        
+        .difficulty select {
+            background-color: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .mobile-controls {
+            display: none;
+            margin-top: 20px;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .mobile-btn {
+            background-color: rgba(0, 150, 255, 0.7);
+            color: white;
+            border: none;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .game-over h2 {
+            color: #ff3366;
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(255, 51, 102, 0.7);
+        }
+        
+        .final-score {
+            color: #00ffcc;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(to bottom, #ff3366, #cc0044);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
+        }
+        
+        .restart-btn:hover {
+            background: linear-gradient(to bottom, #ff5588, #ff3366);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 51, 102, 0.4);
+        }
+        
+        footer {
+            margin-top: 30px;
+            color: #666;
+            text-align: center;
+            font-size: 0.9rem;
+            width: 100%;
+            padding-top: 20px;
+            border-top: 1px solid #222;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 850px) {
+            .game-container, .game-info, .controls {
+                width: 95vw;
+            }
+            
+            .game-container {
+                height: 70vh;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .instructions, .game-controls {
+                width: 100%;
+            }
+            
+            .mobile-controls {
+                display: flex;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>避障挑戰</h1>
+            <div class="subtitle">控制方塊躲避障礙物，躲避得越多分數越高！</div>
+        </header>
+        
+        <div class="game-info">
+            <div class="score-container">
+                <div class="score-label">當前分數</div>
+                <div class="score-value">0</div>
+            </div>
+            <div class="high-score-container">
+                <div class="high-score-label">最高分數</div>
+                <div class="high-score-value">0</div>
+            </div>
+        </div>
+        
+        <div class="game-container">
+            <canvas id="gameCanvas" width="800" height="500"></canvas>
+            
+            <div class="game-over">
+                <h2>遊戲結束！</h2>
+                <div class="final-score">得分: <span id="finalScore">0</span></div>
+                <button class="restart-btn">再玩一次</button>
+            </div>
+        </div>
+        
+        <div class="mobile-controls">
+            <button class="mobile-btn" id="upBtn">↑</button>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="mobile-btn" id="leftBtn">←</button>
+                <button class="mobile-btn" id="rightBtn">→</button>
+            </div>
+            <button class="mobile-btn" id="downBtn">↓</button>
+        </div>
+        
+        <div class="controls">
+            <div class="instructions">
+                <h3>遊戲說明</h3>
+                <p>使用 <span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> 鍵控制方塊移動</p>
+                <p>躲避從右側出現的紅色障礙物</p>
+                <p>每成功躲避一個障礙物得10分</p>
+                <p>遊戲難度會隨分數增加而提高</p>
+                <p>碰到障礙物或邊界遊戲結束</p>
+            </div>
+            
+            <div class="game-controls">
+                <button class="start-btn">開始遊戲</button>
+                <div class="difficulty">
+                    <label for="difficulty">難度:</label>
+                    <select id="difficulty">
+                        <option value="easy">簡單</option>
+                        <option value="medium" selected>中等</option>
+                        <option value="hard">困難</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>HTML5 避障遊戲 - 躲避越多分數越高 | 使用 Canvas 製作</p>
+        </footer>
+    </div>
+
+    <script>
+        // 遊戲變數
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.querySelector('.score-value');
+        const highScoreElement = document.querySelector('.high-score-value');
+        const finalScoreElement = document.getElementById('finalScore');
+        const startButton = document.querySelector('.start-btn');
+        const restartButton = document.querySelector('.restart-btn');
+        const gameOverScreen = document.querySelector('.game-over');
+        const difficultySelect = document.getElementById('difficulty');
+        
+        // 行動控制按鈕
+        const upBtn = document.getElementById('upBtn');
+        const downBtn = document.getElementById('downBtn');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        
+        // 遊戲狀態
+        let gameRunning = false;
+        let score = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let animationId;
+        
+        // 玩家屬性
+        const player = {
+            x: 100,
+            y: canvas.height / 2,
+            width: 30,
+            height: 30,
+            speed: 7,
+            color: '#00ffcc'
+        };
+        
+        // 障礙物陣列
+        let obstacles = [];
+        
+        // 難度設定
+        const difficulties = {
+            easy: { obstacleSpeed: 3, spawnRate: 80, obstacleWidth: 40 },
+            medium: { obstacleSpeed: 5, spawnRate: 60, obstacleWidth: 35 },
+            hard: { obstacleSpeed: 7, spawnRate: 40, obstacleWidth: 30 }
+        };
+        
+        let currentDifficulty = difficulties.medium;
+        
+        // 初始化遊戲
+        function initGame() {
+            score = 0;
+            obstacles = [];
+            player.x = 100;
+            player.y = canvas.height / 2;
+            updateScore();
+            highScoreElement.textContent = highScore;
+            
+            // 設置難度
+            const difficulty = difficultySelect.value;
+            currentDifficulty = difficulties[difficulty];
+            
+            gameRunning = true;
+            gameOverScreen.style.display = 'none';
+            
+            // 開始遊戲循環
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            gameLoop();
+        }
+        
+        // 繪製玩家
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // 添加發光效果
+            ctx.shadowColor = player.color;
+            ctx.shadowBlur = 15;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.shadowBlur = 0;
+            
+            // 添加玩家內部細節
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 8, player.y + 8, player.width - 16, player.height - 16);
+        }
+        
+        // 創建障礙物
+        function createObstacle() {
+            const height = Math.floor(Math.random() * 150) + 50;
+            const gap = Math.floor(Math.random() * 150) + 100;
+            const position = Math.floor(Math.random() * (canvas.height - height - gap));
+            
+            obstacles.push({
+                x: canvas.width,
+                y: position,
+                width: currentDifficulty.obstacleWidth,
+                height: height,
+                gap: gap,
+                color: '#ff3366',
+                passed: false
+            });
+        }
+        
+        // 繪製障礙物
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                // 繪製上部分障礙物
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, 0, obstacle.width, obstacle.y);
+                
+                // 繪製下部分障礙物
+                ctx.fillRect(
+                    obstacle.x, 
+                    obstacle.y + obstacle.height + obstacle.gap, 
+                    obstacle.width, 
+                    canvas.height - (obstacle.y + obstacle.height + obstacle.gap)
+                );
+                
+                // 添加障礙物邊框
+                ctx.strokeStyle = '#ff6699';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obstacle.x, 0, obstacle.width, obstacle.y);
+                ctx.strokeRect(
+                    obstacle.x, 
+                    obstacle.y + obstacle.height + obstacle.gap, 
+                    obstacle.width, 
+                    canvas.height - (obstacle.y + obstacle.height + obstacle.gap)
+                );
+            });
+        }
+        
+        // 更新障礙物位置
+        function updateObstacles() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                obstacle.x -= currentDifficulty.obstacleSpeed;
+                
+                // 如果障礙物通過玩家且未被計分
+                if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
+                    obstacle.passed = true;
+                    score += 10;
+                    updateScore();
+                }
+                
+                // 移除離開畫布的障礙物
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+            
+            // 隨機生成新障礙物
+            if (Math.random() < 0.02 && gameRunning) {
+                createObstacle();
+            }
+        }
+        
+        // 碰撞檢測
+        function checkCollision() {
+            // 檢查邊界碰撞
+            if (player.y < 0 || player.y + player.height > canvas.height ||
+                player.x < 0 || player.x + player.width > canvas.width) {
+                return true;
+            }
+            
+            // 檢查與障礙物的碰撞
+            for (let obstacle of obstacles) {
+                // 檢查是否與上部分障礙物碰撞
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y &&
+                    player.y + player.height > 0) {
+                    return true;
+                }
+                
+                // 檢查是否與下部分障礙物碰撞
+                const bottomObstacleY = obstacle.y + obstacle.height + obstacle.gap;
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y + player.height > bottomObstacleY &&
+                    player.y < canvas.height) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // 更新分數
+        function updateScore() {
+            scoreElement.textContent = score;
+            
+            // 更新最高分數
+            if (score > highScore) {
+                highScore = score;
+                highScoreElement.textContent = highScore;
+                localStorage.setItem('highScore', highScore);
+            }
+            
+            // 隨分數增加提高難度
+            if (score > 100 && currentDifficulty !== difficulties.hard) {
+                currentDifficulty = difficulties.hard;
+                difficultySelect.value = 'hard';
+            } else if (score > 50 && currentDifficulty !== difficulties.medium) {
+                currentDifficulty = difficulties.medium;
+                difficultySelect.value = 'medium';
+            }
+        }
+        
+        // 遊戲結束
+        function gameOver() {
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'flex';
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        }
+        
+        // 繪製背景
+        function drawBackground() {
+            // 黑色背景
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 繪製網格
+            ctx.strokeStyle = 'rgba(50, 50, 70, 0.3)';
+            ctx.lineWidth = 1;
+            
+            // 垂直線
+            for (let x = 0; x < canvas.width; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // 水平線
+            for (let y = 0; y < canvas.height; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // 繪製分數效果
+            if (score > 0) {
+                ctx.fillStyle = `rgba(0, 255, 204, ${0.05 + (score % 100) / 2000})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        
+        // 遊戲主循環
+        function gameLoop() {
+            // 清除畫布
+            drawBackground();
+            
+            // 更新和繪製障礙物
+            updateObstacles();
+            drawObstacles();
+            
+            // 繪製玩家
+            drawPlayer();
+            
+            // 檢查碰撞
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            
+            // 繼續遊戲循環
+            if (gameRunning) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // 玩家控制
+        const keys = {};
+        
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        function handlePlayerMovement() {
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) {
+                player.y -= player.speed;
+            }
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+                player.y += player.speed;
+            }
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                player.x += player.speed;
+            }
+            
+            // 確保玩家不會移出畫布
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+        }
+        
+        // 更新函數，處理玩家移動
+        function update() {
+            handlePlayerMovement();
+        }
+        
+        // 修改遊戲主循環以包含更新函數
+        const originalGameLoop = gameLoop;
+        gameLoop = function() {
+            update();
+            originalGameLoop();
+        };
+        
+        // 事件監聽器
+        startButton.addEventListener('click', initGame);
+        restartButton.addEventListener('click', initGame);
+        
+        difficultySelect.addEventListener('change', () => {
+            if (!gameRunning) return;
+            const difficulty = difficultySelect.value;
+            currentDifficulty = difficulties[difficulty];
+        });
+        
+        // 行動控制
+        function setupMobileControls() {
+            // 按鈕按下
+            upBtn.addEventListener('touchstart', () => keys['ArrowUp'] = true);
+            downBtn.addEventListener('touchstart', () => keys['ArrowDown'] = true);
+            leftBtn.addEventListener('touchstart', () => keys['ArrowLeft'] = true);
+            rightBtn.addEventListener('touchstart', () => keys['ArrowRight'] = true);
+            
+            // 按鈕釋放
+            upBtn.addEventListener('touchend', () => keys['ArrowUp'] = false);
+            downBtn.addEventListener('touchend', () => keys['ArrowDown'] = false);
+            leftBtn.addEventListener('touchend', () => keys['ArrowLeft'] = false);
+            rightBtn.addEventListener('touchend', () => keys['ArrowRight'] = false);
+            
+            // 防止行動裝置上的滾動
+            document.addEventListener('touchmove', (e) => {
+                if (gameRunning) e.preventDefault();
+            }, { passive: false });
+        }
+        
+        // 初始化
+        highScoreElement.textContent = highScore;
+        setupMobileControls();
+        
+        // 初始繪製
+        drawBackground();
+        drawPlayer();
+        
+        // 顯示遊戲說明
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(canvas.width/2 - 200, canvas.height/2 - 60, 400, 120);
+        
+        ctx.fillStyle = '#00ffcc';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('點擊「開始遊戲」按鈕開始', canvas.width/2, canvas.height/2 - 20);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '16px Arial';
+        ctx.fillText('使用方向鍵控制方塊移動', canvas.width/2, canvas.height/2 + 20);
+        ctx.fillText('躲避紅色障礙物', canvas.width/2, canvas.height/2 + 50);
+    </script>
+</body>
+</html>
