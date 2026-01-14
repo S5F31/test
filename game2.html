@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>試管液體自由分類遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            padding: 25px;
+            background: rgba(20, 20, 35, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 100, 150, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 25px rgba(255, 107, 107, 0.4);
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            color: #b0b0d0;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            max-width: 800px;
+            line-height: 1.6;
+            margin: 0 auto 20px;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 35px;
+            background: rgba(25, 25, 45, 0.9);
+            padding: 25px 35px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            padding: 0 15px;
+            position: relative;
+        }
+        
+        .stat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 1px;
+            background: rgba(100, 100, 150, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 3.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 15px currentColor;
+        }
+        
+        .moves-value {
+            color: #4ecdc4;
+        }
+        
+        .level-value {
+            color: #feca57;
+        }
+        
+        .time-value {
+            color: #ff6b6b;
+        }
+        
+        .stat-label {
+            color: #a0a0c0;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+        
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+        
+        .tubes-row {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            padding: 25px;
+            background: rgba(20, 20, 35, 0.7);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 100, 150, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .tube-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tube {
+            width: 100px;
+            height: 280px;
+            background: rgba(30, 30, 50, 0.9);
+            border-radius: 10px 10px 50px 50px;
+            position: relative;
+            overflow: hidden;
+            border: 4px solid rgba(100, 100, 150, 0.6);
+            box-shadow: 
+                inset 0 0 25px rgba(0, 0, 0, 0.6),
+                0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tube::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: rgba(40, 40, 60, 0.8);
+            border-radius: 6px 6px 0 0;
+            z-index: 2;
+        }
+        
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 5px;
+            right: 5px;
+            border-radius: 20px 20px 0 0;
+            transition: height 0.5s ease;
+            z-index: 1;
+        }
+        
+        .liquid::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .tube-label {
+            margin-top: 15px;
+            color: #b0b0d0;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 8px 20px;
+            background: rgba(40, 40, 60, 0.8);
+            border-radius: 10px;
+            min-width: 100px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .tube-container.selected .tube {
+            transform: translateY(-15px);
+            border-color: #feca57;
+            box-shadow: 
+                inset 0 0 25px rgba(0, 0, 0, 0.6),
+                0 0 30px rgba(254, 202, 87, 0.7);
+        }
+        
+        .tube-container.selected .tube-label {
+            color: #feca57;
+            background: rgba(60, 50, 30, 0.8);
+        }
+        
+        .tube-container:hover:not(.selected) .tube {
+            transform: translateY(-8px);
+            border-color: rgba(200, 200, 255, 0.8);
+        }
+        
+        .tube-container.empty .tube-label {
+            color: #888;
+        }
+        
+        .tube-container.completed .tube {
+            border-color: #4ecdc4;
+            box-shadow: 
+                inset 0 0 25px rgba(0, 0, 0, 0.6),
+                0 0 25px rgba(78, 205, 196, 0.5);
+        }
+        
+        .tube-container.completed .tube-label {
+            color: #4ecdc4;
+        }
+        
+        .liquid-count {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            z-index: 3;
+        }
+        
+        .game-controls {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .game-btn {
+            padding: 18px 40px;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #ff6b6b, #c44d58);
+            color: white;
+        }
+        
+        .hint-btn {
+            background: linear-gradient(135deg, #feca57, #ff9f43);
+            color: white;
+        }
+        
+        .undo-btn {
+            background: linear-gradient(135deg, #45b7d1, #3498db);
+            color: white;
+        }
+        
+        .solve-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+        
+        .game-btn:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .game-btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .game-info {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .instructions {
+            flex: 1;
+            background: rgba(25, 25, 45, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        .instructions h2 {
+            color: #feca57;
+            margin-bottom: 25px;
+            font-size: 1.9rem;
+            text-align: center;
+        }
+        
+        .instructions-list {
+            list-style-type: none;
+        }
+        
+        .instructions-list li {
+            margin-bottom: 18px;
+            padding-left: 35px;
+            position: relative;
+            color: #d0d0e0;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .instructions-list li::before {
+            content: "●";
+            color: #4ecdc4;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 0;
+            top: 2px;
+        }
+        
+        .hint-box {
+            flex: 1;
+            background: rgba(25, 25, 45, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 100, 150, 0.2);
+            display: none;
+        }
+        
+        .hint-box.active {
+            display: block;
+        }
+        
+        .hint-box h3 {
+            color: #feca57;
+            margin-bottom: 20px;
+            font-size: 1.7rem;
+            text-align: center;
+        }
+        
+        .hint-text {
+            color: #d0d0e0;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: center;
+            padding: 15px;
+            background: rgba(40, 40, 60, 0.6);
+            border-radius: 10px;
+            border-left: 4px solid #feca57;
+        }
+        
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .message-box {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 60px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(100, 100, 150, 0.3);
+            animation: messageAppear 0.5s ease-out;
+        }
+        
+        @keyframes messageAppear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .message-title {
+            font-size: 3.5rem;
+            margin-bottom: 25px;
+            color: #feca57;
+            text-shadow: 0 0 20px rgba(254, 202, 87, 0.7);
+        }
+        
+        .message-content {
+            font-size: 1.6rem;
+            margin-bottom: 40px;
+            color: #d0d0e0;
+            line-height: 1.6;
+        }
+        
+        .message-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 50px;
+            background: rgba(30, 30, 50, 0.7);
+            padding: 25px;
+            border-radius: 15px;
+        }
+        
+        .message-stat {
+            text-align: center;
+        }
+        
+        .message-stat-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .moves-stat {
+            color: #4ecdc4;
+        }
+        
+        .time-stat {
+            color: #ff6b6b;
+        }
+        
+        .score-stat {
+            color: #feca57;
+        }
+        
+        .message-stat-label {
+            color: #a0a0c0;
+            font-size: 1.2rem;
+        }
+        
+        .close-btn {
+            background: linear-gradient(135deg, #ff6b6b, #c44d58);
+            color: white;
+            padding: 18px 50px;
+            font-size: 1.4rem;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
+        }
+        
+        .liquid-animation {
+            animation: liquidMove 1.5s ease-out;
+        }
+        
+        @keyframes liquidMove {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+        
+        .tube-shake {
+            animation: shakeTube 0.5s ease-in-out;
+        }
+        
+        @keyframes shakeTube {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .completed-pulse {
+            animation: completedPulse 2s infinite;
+        }
+        
+        @keyframes completedPulse {
+            0% { box-shadow: 0 0 15px rgba(78, 205, 196, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(78, 205, 196, 0.8); }
+            100% { box-shadow: 0 0 15px rgba(78, 205, 196, 0.5); }
+        }
+        
+        .color-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 2px solid white;
+        }
+        
+        footer {
+            margin-top: 40px;
+            color: #666;
+            text-align: center;
+            font-size: 1rem;
+            padding: 25px;
+            width: 100%;
+            border-top: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        @media (max-width: 1100px) {
+            .tubes-row {
+                gap: 25px;
+            }
+            
+            .tube {
+                width: 90px;
+                height: 250px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.4rem;
+            }
+            
+            .game-stats {
+                flex-direction: column;
+                gap: 25px;
+                padding: 20px;
+            }
+            
+            .stat-item:not(:last-child)::after {
+                display: none;
+            }
+            
+            .tubes-row {
+                gap: 20px;
+            }
+            
+            .tube {
+                width: 80px;
+                height: 220px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-btn {
+                width: 90%;
+                max-width: 300px;
+            }
+            
+            .message-box {
+                padding: 40px 20px;
+            }
+            
+            .message-title {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tube {
+                width: 70px;
+                height: 200px;
+            }
+            
+            .tube-label {
+                font-size: 1.1rem;
+                min-width: 80px;
+                padding: 6px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 試管液體自由分類</h1>
+            <p class="subtitle">將所有試管裡的液體按照顏色分開，每個試管裡只留同一種顏色的水。可以將液體倒入任何試管，只要不超過容量限制。</p>
+        </header>
+        
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-value moves-value" id="moves">0</div>
+                <div class="stat-label">移動次數</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value level-value" id="level">1</div>
+                <div class="stat-label">關卡</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value time-value" id="time">0</div>
+                <div class="stat-label">時間 (秒)</div>
+            </div>
+        </div>
+        
+        <div class="game-board">
+            <div class="tubes-row" id="tubes-container">
+                <!-- 試管會由JavaScript動態生成 -->
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            <button class="game-btn start-btn" id="start-btn">
+                <span>▶</span> 開始遊戲
+            </button>
+            <button class="game-btn hint-btn" id="hint-btn">
+                <span>💡</span> 提示
+            </button>
+            <button class="game-btn undo-btn" id="undo-btn" disabled>
+                <span>↶</span> 撤消
+            </button>
+            <button class="game-btn solve-btn" id="solve-btn">
+                <span>⚡</span> 自動解題
+            </button>
+            <button class="game-btn reset-btn" id="reset-btn">
+                <span>🔄</span> 重新開始
+            </button>
+        </div>
+        
+        <div class="game-info">
+            <div class="instructions">
+                <h2>遊戲規則（自由版）</h2>
+                <ul class="instructions-list">
+                    <li><span class="color-indicator" style="background-color: #ff6b6b;"></span>目標：將所有試管裡的液體按照顏色分開，每個試管裡只留同一種顏色的水</li>
+                    <li><span class="color-indicator" style="background-color: #4ecdc4;"></span>操作：點擊一個裝有液體的試管，再點擊另一個目標試管，即可將最上方的液體倒入目標試管</li>
+                    <li><span class="color-indicator" style="background-color: #45b7d1;"></span>重要：可以將液體倒入任何試管，不限制顏色！可以倒入不同顏色上方</li>
+                    <li><span class="color-indicator" style="background-color: #96ceb4;"></span>容量：每支試管最多容納4個單位的液體，超過無法倒入</li>
+                    <li><span class="color-indicator" style="background-color: #feca57;"></span>起始：遊戲開始時有5支試管，其中1支為空管，方便過渡</li>
+                    <li><span class="color-indicator" style="background-color: #a29bfe;"></span>勝利：當所有試管都只包含一種顏色或為空時，遊戲勝利</li>
+                </ul>
+            </div>
+            
+            <div class="hint-box" id="hint-box">
+                <h3>遊戲提示</h3>
+                <div class="hint-text" id="hint-text">
+                    點擊「提示」按鈕獲取幫助
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>試管液體自由分類遊戲 | HTML5 + JavaScript 實現 | 可以自由倒入任何試管！</p>
+        </footer>
+        
+        <div class="message-overlay" id="message-overlay">
+            <div class="message-box">
+                <div class="message-title" id="message-title">恭喜！</div>
+                <div class="message-content" id="message-content">你成功完成了第1關！</div>
+                
+                <div class="message-stats">
+                    <div class="message-stat">
+                        <div class="message-stat-value moves-stat" id="message-moves">0</div>
+                        <div class="message-stat-label">移動次數</div>
+                    </div>
+                    <div class="message-stat">
+                        <div class="message-stat-value time-stat" id="message-time">0</div>
+                        <div class="message-stat-label">用時 (秒)</div>
+                    </div>
+                    <div class="message-stat">
+                        <div class="message-stat-value score-stat" id="message-score">0</div>
+                        <div class="message-stat-label">分數</div>
+                    </div>
+                </div>
+                
+                <button class="close-btn" id="close-btn">繼續下一關</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲配置
+        const CONFIG = {
+            totalTubes: 5,           // 總試管數
+            maxLiquidPerTube: 4,     // 每支試管最大容量
+            emptyTubes: 1,           // 空試管數量
+            colors: [                // 顏色定義
+                { name: "紅色", value: "#ff6b6b", lightValue: "#ff8e8e" },
+                { name: "藍色", value: "#45b7d1", lightValue: "#6acae8" },
+                { name: "綠色", value: "#96ceb4", lightValue: "#b0e6cc" },
+                { name: "黃色", value: "#feca57", lightValue: "#ffd985" },
+                { name: "紫色", value: "#a29bfe", lightValue: "#b9b4ff" }
+            ]
+        };
+        
+        // 遊戲狀態
+        const gameState = {
+            level: 1,
+            moves: 0,
+            time: 0,
+            isPlaying: false,
+            timer: null,
+            selectedTube: null,
+            tubes: [],
+            history: [],
+            colorsPerLevel: 4,  // 第一關使用4種顏色
+            maxLevel: 10
+        };
+        
+        // DOM 元素
+        const elements = {
+            moves: document.getElementById('moves'),
+            level: document.getElementById('level'),
+            time: document.getElementById('time'),
+            startBtn: document.getElementById('start-btn'),
+            hintBtn: document.getElementById('hint-btn'),
+            undoBtn: document.getElementById('undo-btn'),
+            solveBtn: document.getElementById('solve-btn'),
+            resetBtn: document.getElementById('reset-btn'),
+            tubesContainer: document.getElementById('tubes-container'),
+            hintBox: document.getElementById('hint-box'),
+            hintText: document.getElementById('hint-text'),
+            messageOverlay: document.getElementById('message-overlay'),
+            messageTitle: document.getElementById('message-title'),
+            messageContent: document.getElementById('message-content'),
+            messageMoves: document.getElementById('message-moves'),
+            messageTime: document.getElementById('message-time'),
+            messageScore: document.getElementById('message-score'),
+            closeBtn: document.getElementById('close-btn')
+        };
+        
+        // 初始化遊戲
+        function initGame() {
+            gameState.moves = 0;
+            gameState.time = 0;
+            gameState.isPlaying = false;
+            gameState.selectedTube = null;
+            gameState.history = [];
+            
+            clearInterval(gameState.timer);
+            
+            updateDisplay();
+            createTubes();
+            
+            elements.startBtn.innerHTML = '<span>▶</span> 開始遊戲';
+            elements.undoBtn.disabled = true;
+            elements.hintBox.classList.remove('active');
+            
+            // 重置選中狀態
+            document.querySelectorAll('.tube-container').forEach(tube => {
+                tube.classList.remove('selected');
+            });
+        }
+        
+        // 創建試管
+        function createTubes() {
+            elements.tubesContainer.innerHTML = '';
+            gameState.tubes = [];
+            
+            // 計算本關使用的顏色
+            const colorsInLevel = CONFIG.colors.slice(0, gameState.colorsPerLevel);
+            
+            // 創建試管容器
+            for (let i = 0; i < CONFIG.totalTubes; i++) {
+                const tubeContainer = document.createElement('div');
+                tubeContainer.className = 'tube-container';
+                tubeContainer.dataset.index = i;
+                
+                const tube = document.createElement('div');
+                tube.className = 'tube';
+                tube.id = `tube-${i}`;
+                
+                const tubeLabel = document.createElement('div');
+                tubeLabel.className = 'tube-label';
+                tubeLabel.textContent = `試管 ${i + 1}`;
+                
+                tubeContainer.appendChild(tube);
+                tubeContainer.appendChild(tubeLabel);
+                elements.tubesContainer.appendChild(tubeContainer);
+                
+                // 初始化試管狀態
+                gameState.tubes[i] = {
+                    liquids: [],
+                    element: tube,
+                    label: tubeLabel,
+                    container: tubeContainer
+                };
+            }
+            
+            // 分配液體到試管
+            distributeLiquids(colorsInLevel);
+            
+            // 設置點擊事件
+            document.querySelectorAll('.tube-container').forEach((container, index) => {
+                container.addEventListener('click', () => handleTubeClick(index));
+            });
+        }
+        
+        // 分配液體
+        function distributeLiquids(colors) {
+            // 創建所有液體單元
+            let allLiquids = [];
+            colors.forEach(color => {
+                // 每種顏色4個單位
+                for (let i = 0; i < CONFIG.maxLiquidPerTube; i++) {
+                    allLiquids.push(color);
+                }
+            });
+            
+            // 打亂順序
+            allLiquids.sort(() => Math.random() - 0.5);
+            
+            // 計算每管應有液體數（最後一管為空）
+            const tubesWithLiquid = CONFIG.totalTubes - CONFIG.emptyTubes;
+            const liquidsPerTube = Math.floor(allLiquids.length / tubesWithLiquid);
+            
+            // 分配液體到前幾管
+            for (let i = 0; i < tubesWithLiquid; i++) {
+                const tubeLiquids = allLiquids.slice(i * liquidsPerTube, (i + 1) * liquidsPerTube);
+                gameState.tubes[i].liquids = tubeLiquids;
+                renderTube(i);
+            }
+            
+            // 最後一管為空
+            gameState.tubes[CONFIG.totalTubes - 1].liquids = [];
+            gameState.tubes[CONFIG.totalTubes - 1].container.classList.add('empty');
+            renderTube(CONFIG.totalTubes - 1);
+            
+            // 如果有剩餘液體，隨機分配到非空試管
+            const remainingLiquids = allLiquids.slice(tubesWithLiquid * liquidsPerTube);
+            remainingLiquids.forEach(liquid => {
+                const randomTube = Math.floor(Math.random() * tubesWithLiquid);
+                if (gameState.tubes[randomTube].liquids.length < CONFIG.maxLiquidPerTube) {
+                    gameState.tubes[randomTube].liquids.push(liquid);
+                    renderTube(randomTube);
+                }
+            });
+        }
+        
+        // 渲染試管
+        function renderTube(tubeIndex) {
+            const tube = gameState.tubes[tubeIndex];
+            const tubeElement = tube.element;
+            
+            // 清空試管
+            tubeElement.innerHTML = '';
+            
+            // 更新標籤
+            if (tube.liquids.length === 0) {
+                tube.container.classList.add('empty');
+            } else {
+                tube.container.classList.remove('empty');
+            }
+            
+            // 檢查試管是否完成（同一顏色）
+            if (tube.liquids.length > 0) {
+                const firstColor = tube.liquids[0].value;
+                const allSame = tube.liquids.every(liquid => liquid.value === firstColor);
+                
+                if (allSame && tube.liquids.length === CONFIG.maxLiquidPerTube) {
+                    tube.container.classList.add('completed');
+                    tube.container.classList.add('completed-pulse');
+                } else {
+                    tube.container.classList.remove('completed');
+                    tube.container.classList.remove('completed-pulse');
+                }
+            }
+            
+            // 創建液體層
+            const liquidHeight = 280 / CONFIG.maxLiquidPerTube;
+            
+            tube.liquids.forEach((liquid, index) => {
+                const liquidElement = document.createElement('div');
+                liquidElement.className = 'liquid';
+                liquidElement.style.backgroundColor = liquid.value;
+                liquidElement.style.height = `${liquidHeight}px`;
+                liquidElement.style.bottom = `${index * liquidHeight}px`;
+                liquidElement.title = liquid.name;
+                
+                // 添加液面效果
+                const surface = document.createElement('div');
+                surface.style.position = 'absolute';
+                surface.style.top = '0';
+                surface.style.left = '0';
+                surface.style.right = '0';
+                surface.style.height = '15px';
+                surface.style.background = `linear-gradient(to bottom, ${liquid.lightValue}, transparent)`;
+                surface.style.borderRadius = '20px 20px 0 0';
+                
+                liquidElement.appendChild(surface);
+                tubeElement.appendChild(liquidElement);
+            });
+            
+            // 添加液體數量指示
+            if (tube.liquids.length > 0) {
+                const countIndicator = document.createElement('div');
+                countIndicator.className = 'liquid-count';
+                countIndicator.textContent = `${tube.liquids.length}/${CONFIG.maxLiquidPerTube}`;
+                tubeElement.appendChild(countIndicator);
+            }
+        }
+        
+        // 處理試管點擊
+        function handleTubeClick(tubeIndex) {
+            if (!gameState.isPlaying) return;
+            
+            const tube = gameState.tubes[tubeIndex];
+            
+            // 如果沒有選中的試管
+            if (gameState.selectedTube === null) {
+                // 不能選擇空試管作為來源
+                if (tube.liquids.length === 0) {
+                    showHint("請選擇有液體的試管");
+                    shakeTube(tubeIndex);
+                    return;
+                }
+                
+                gameState.selectedTube = tubeIndex;
+                tube.container.classList.add('selected');
+                showHint(`已選擇試管 ${tubeIndex + 1}，請選擇目標試管`);
+            }
+            // 如果已經有選中的試管，嘗試移動液體
+            else if (gameState.selectedTube !== tubeIndex) {
+                moveLiquid(gameState.selectedTube, tubeIndex);
+                
+                // 取消選中狀態
+                gameState.tubes[gameState.selectedTube].container.classList.remove('selected');
+                gameState.selectedTube = null;
+            }
+            // 如果點擊同一支試管，取消選中
+            else {
+                tube.container.classList.remove('selected');
+                gameState.selectedTube = null;
+                showHint("選擇已取消");
+            }
+        }
+        
+        // 移動液體
+        function moveLiquid(fromIndex, toIndex) {
+            const fromTube = gameState.tubes[fromIndex];
+            const toTube = gameState.tubes[toIndex];
+            
+            // 檢查來源試管是否為空
+            if (fromTube.liquids.length === 0) {
+                showHint("來源試管是空的");
+                shakeTube(fromIndex);
+                return false;
+            }
+            
+            // 檢查目標試管是否已滿
+            if (toTube.liquids.length >= CONFIG.maxLiquidPerTube) {
+                showHint("目標試管已滿");
+                shakeTube(toIndex);
+                return false;
+            }
+            
+            // 獲取要移動的液體（最上層）
+            const liquidToMove = fromTube.liquids[fromTube.liquids.length - 1];
+            
+            // 自由版：可以倒入任何試管，只要不超過容量！
+            // 不再檢查顏色是否相同
+            
+            // 保存歷史狀態
+            saveHistory();
+            
+            // 執行移動
+            fromTube.liquids.pop();
+            toTube.liquids.push(liquidToMove);
+            
+            // 更新移動次數
+            gameState.moves++;
+            
+            // 重新渲染兩個試管
+            renderTube(fromIndex);
+            renderTube(toIndex);
+            
+            // 添加動畫效果
+            animateLiquidMove(fromIndex, toIndex);
+            
+            // 更新顯示
+            updateDisplay();
+            
+            // 啟用撤消按鈕
+            elements.undoBtn.disabled = false;
+            
+            // 檢查遊戲是否完成
+            if (checkWinCondition()) {
+                endGame(true);
+            }
+            
+            return true;
+        }
+        
+        // 動畫效果：液體移動
+        function animateLiquidMove(fromIndex, toIndex) {
+            const fromTube = gameState.tubes[fromIndex].container;
+            const toTube = gameState.tubes[toIndex].container;
+            
+            fromTube.classList.add('liquid-animation');
+            toTube.classList.add('liquid-animation');
+            
+            setTimeout(() => {
+                fromTube.classList.remove('liquid-animation');
+                toTube.classList.remove('liquid-animation');
+            }, 1500);
+        }
+        
+        // 抖動試管（錯誤提示）
+        function shakeTube(tubeIndex) {
+            const tube = gameState.tubes[tubeIndex].container;
+            tube.classList.add('tube-shake');
+            
+            setTimeout(() => {
+                tube.classList.remove('tube-shake');
+            }, 500);
+        }
+        
+        // 保存歷史狀態
+        function saveHistory() {
+            // 深拷貝當前狀態
+            const stateCopy = gameState.tubes.map(tube => ({
+                liquids: [...tube.liquids.map(l => ({...l}))]
+            }));
+            
+            gameState.history.push(stateCopy);
+            
+            // 限制歷史記錄數量
+            if (gameState.history.length > 20) {
+                gameState.history.shift();
+            }
+        }
+        
+        // 撤消操作
+        function undoMove() {
+            if (gameState.history.length === 0) return;
+            
+            // 恢復上一個狀態
+            const lastState = gameState.history.pop();
+            
+            gameState.tubes.forEach((tube, index) => {
+                tube.liquids = lastState[index].liquids.map(l => ({...l}));
+                renderTube(index);
+            });
+            
+            // 更新移動次數
+            gameState.moves = Math.max(0, gameState.moves - 1);
+            
+            // 更新顯示
+            updateDisplay();
+            
+            // 如果沒有更多歷史記錄，禁用撤消按鈕
+            elements.undoBtn.disabled = gameState.history.length === 0;
+            
+            // 取消選中狀態
+            if (gameState.selectedTube !== null) {
+                gameState.tubes[gameState.selectedTube].container.classList.remove('selected');
+                gameState.selectedTube = null;
+            }
+            
+            showHint("已撤消上一步操作");
+        }
+        
+        // 檢查勝利條件
+        function checkWinCondition() {
+            for (let i = 0; i < gameState.tubes.length; i++) {
+                const tube = gameState.tubes[i];
+                
+                // 如果試管為空，跳過
+                if (tube.liquids.length === 0) continue;
+                
+                // 檢查所有液體是否相同
+                const firstColor = tube.liquids[0].value;
+                const allSame = tube.liquids.every(liquid => liquid.value === firstColor);
+                
+                // 檢查試管是否已滿
+                const isFull = tube.liquids.length === CONFIG.maxLiquidPerTube;
+                
+                if (!allSame || !isFull) return false;
+            }
+            
+            return true;
+        }
+        
+        // 開始遊戲
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            gameState.time = 0;
+            gameState.moves = 0;
+            
+            elements.startBtn.innerHTML = '<span>⏸</span> 遊戲進行中';
+            elements.startBtn.disabled = true;
+            
+            // 啟動計時器
+            gameState.timer = setInterval(() => {
+                gameState.time++;
+                updateDisplay();
+            }, 1000);
+            
+            updateDisplay();
+            showHint("遊戲開始！可以自由將液體倒入任何試管！");
+        }
+        
+        // 結束遊戲
+        function endGame(isWin) {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+            
+            elements.startBtn.innerHTML = '<span>▶</span> 開始遊戲';
+            elements.startBtn.disabled = false;
+            
+            // 計算分數
+            const score = calculateScore();
+            
+            if (isWin) {
+                elements.messageTitle.textContent = "恭喜勝利！";
+                elements.messageContent.textContent = `你成功完成了第${gameState.level}關！`;
+            } else {
+                elements.messageTitle.textContent = "遊戲結束";
+                elements.messageContent.textContent = "請繼續努力！";
+            }
+            
+            elements.messageMoves.textContent = gameState.moves;
+            elements.messageTime.textContent = gameState.time;
+            elements.messageScore.textContent = score;
+            
+            elements.messageOverlay.style.display = 'flex';
+        }
+        
+        // 計算分數
+        function calculateScore() {
+            const timeBonus = Math.max(0, 5000 - gameState.time * 10);
+            const movesBonus = Math.max(0, 3000 - gameState.moves * 20);
+            const levelBonus = gameState.level * 500;
+            
+            return timeBonus + movesBonus + levelBonus;
+        }
+        
+        // 下一關
+        function nextLevel() {
+            if (gameState.level < gameState.maxLevel) {
+                gameState.level++;
+                gameState.colorsPerLevel = Math.min(5, 3 + Math.floor(gameState.level / 2));
+            }
+            
+            elements.messageOverlay.style.display = 'none';
+            initGame();
+        }
+        
+        // 顯示提示
+        function showHint(text) {
+            elements.hintText.textContent = text;
+            elements.hintBox.classList.add('active');
+            
+            // 5秒後隱藏提示
+            setTimeout(() => {
+                elements.hintBox.classList.remove('active');
+            }, 5000);
+        }
+        
+        // 提供遊戲提示
+        function giveHint() {
+            if (!gameState.isPlaying) {
+                showHint("請先開始遊戲");
+                return;
+            }
+            
+            // 尋找可能的移動
+            const hint = findBestMove();
+            
+            if (hint) {
+                const fromColor = gameState.tubes[hint.from].liquids.slice(-1)[0].name;
+                const toColor = gameState.tubes[hint.to].liquids.length > 0 ? 
+                    gameState.tubes[hint.to].liquids.slice(-1)[0].name : "空試管";
+                
+                showHint(`提示：將試管 ${hint.from + 1} 的 ${fromColor} 液體移動到試管 ${hint.to + 1} (${toColor})`);
+            } else {
+                showHint("嘗試將相同顏色的液體集中在一起，或使用空試管進行整理");
+            }
+        }
+        
+        // 尋找最佳移動
+        function findBestMove() {
+            // 策略1：優先完成已接近完成的試管
+            for (let fromIndex = 0; fromIndex < gameState.tubes.length; fromIndex++) {
+                const fromTube = gameState.tubes[fromIndex];
+                if (fromTube.liquids.length === 0) continue;
+                
+                const topColor = fromTube.liquids[fromTube.liquids.length - 1];
+                
+                // 尋找相同顏色的試管
+                for (let toIndex = 0; toIndex < gameState.tubes.length; toIndex++) {
+                    if (fromIndex === toIndex) continue;
+                    
+                    const toTube = gameState.tubes[toIndex];
+                    if (toTube.liquids.length >= CONFIG.maxLiquidPerTube) continue;
+                    
+                    // 如果目標試管有相同顏色且未滿，優先移動
+                    if (toTube.liquids.length > 0) {
+                        const targetTopColor = toTube.liquids[toTube.liquids.length - 1];
+                        if (topColor.value === targetTopColor.value) {
+                            return { from: fromIndex, to: toIndex };
+                        }
+                    }
+                }
+            }
+            
+            // 策略2：如果沒有相同顏色，尋找空試管
+            for (let fromIndex = 0; fromIndex < gameState.tubes.length; fromIndex++) {
+                const fromTube = gameState.tubes[fromIndex];
+                if (fromTube.liquids.length === 0) continue;
+                
+                for (let toIndex = 0; toIndex < gameState.tubes.length; toIndex++) {
+                    if (fromIndex === toIndex) continue;
+                    
+                    const toTube = gameState.tubes[toIndex];
+                    if (toTube.liquids.length === 0) {
+                        return { from: fromIndex, to: toIndex };
+                    }
+                }
+            }
+            
+            // 策略3：隨便找一個有效移動
+            for (let fromIndex = 0; fromIndex < gameState.tubes.length; fromIndex++) {
+                const fromTube = gameState.tubes[fromIndex];
+                if (fromTube.liquids.length === 0) continue;
+                
+                for (let toIndex = 0; toIndex < gameState.tubes.length; toIndex++) {
+                    if (fromIndex === toIndex) continue;
+                    
+                    const toTube = gameState.tubes[toIndex];
+                    if (toTube.liquids.length < CONFIG.maxLiquidPerTube) {
+                        return { from: fromIndex, to: toIndex };
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        // 自動解題
+        function solvePuzzle() {
+            if (!gameState.isPlaying) {
+                showHint("請先開始遊戲");
+                return;
+            }
+            
+            showHint("自動解題中... 這可能需要一些時間");
+            
+            // 簡單的自動解題算法
+            setTimeout(() => {
+                const move = findBestMove();
+                if (move) {
+                    // 模擬點擊選中來源試管
+                    gameState.selectedTube = move.from;
+                    gameState.tubes[move.from].container.classList.add('selected');
+                    
+                    // 稍後模擬點擊目標試管
+                    setTimeout(() => {
+                        moveLiquid(move.from, move.to);
+                        
+                        // 取消選中狀態
+                        if (gameState.selectedTube !== null) {
+                            gameState.tubes[gameState.selectedTube].container.classList.remove('selected');
+                            gameState.selectedTube = null;
+                        }
+                        
+                        showHint("自動完成了一步移動");
+                    }, 500);
+                } else {
+                    showHint("無法找到有效移動");
+                }
+            }, 1000);
+        }
+        
+        // 更新顯示
+        function updateDisplay() {
+            elements.moves.textContent = gameState.moves;
+            elements.level.textContent = gameState.level;
+            elements.time.textContent = gameState.time;
+        }
+        
+        // 設置事件監聽器
+        function setupEventListeners() {
+            elements.startBtn.addEventListener('click', startGame);
+            elements.resetBtn.addEventListener('click', initGame);
+            elements.hintBtn.addEventListener('click', giveHint);
+            elements.undoBtn.addEventListener('click', undoMove);
+            elements.solveBtn.addEventListener('click', solvePuzzle);
+            elements.closeBtn.addEventListener('click', nextLevel);
+        }
+        
+        // 初始化遊戲
+        window.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
