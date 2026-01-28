@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninja飛刀大挑戰</title>
+    <title>Ninja飛刀大挑戰 - 完整版</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
         }
         
         body {
@@ -16,7 +18,6 @@
             color: #fff;
             font-family: 'Arial', sans-serif;
             overflow: hidden;
-            user-select: none;
             width: 100vw;
             height: 100vh;
             position: relative;
@@ -26,578 +27,840 @@
             width: 100%;
             height: 100%;
             position: relative;
+            z-index: 1;
         }
-        
-        #gameTitle {
-            text-align: center;
-            color: #00BFFF;
-            font-size: 42px;
-            text-shadow: 0 0 15px #00BFFF;
-            letter-spacing: 3px;
-            padding: 20px 0;
-            position: absolute;
+
+        /* 遮罩層 */
+        .overlay-screen {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        #levelTransition {
+            background-color: #2c1608;
+            transform: translateX(100%);
+            transition: transform 0.1s;
+        }
+
+        .slide-in {
+            animation: slideIn 2s forwards;
+        }
+
+        @keyframes slideIn {
+            0% { transform: translateX(100%); }
+            20% { transform: translateX(0); }
+            80% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
         }
         
+        #startScreen {
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+        }
+
+        #startBox {
+            background: linear-gradient(135deg, #4a2c20, #2a1a10);
+            padding: 40px 60px;
+            border-radius: 20px;
+            border: 4px solid #8B4513;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(139, 69, 19, 0.5);
+            min-width: 400px;
+            max-width: 90%;
+        }
+
+        #startTitle {
+            color: #FFD700;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+            color: #FF4500;
+            font-weight: bold;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* 頂部UI */
         #header {
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
             width: 100%;
             padding: 15px 20px;
             position: absolute;
-            top: 80px;
+            top: 0;
             left: 0;
-            z-index: 10;
+            z-index: 100;
+            pointer-events: none;
         }
         
         .gameInfo {
-            background-color: rgba(0, 50, 100, 0.8);
-            padding: 12px 24px;
-            border-radius: 10px;
-            border: 1px solid #00BFFF;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #8B4513;
             text-align: center;
-            min-width: 140px;
+            min-width: 80px;
+            backdrop-filter: blur(5px);
+            pointer-events: auto;
         }
         
-        .gameInfo h3 {
-            color: #FFD700;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-        
-        .gameInfo p {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        #speedInfo {
-            position: absolute;
-            top: 160px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 50, 100, 0.8);
-            padding: 8px 20px;
+        .gameInfo h3 { color: #AAA; font-size: 12px; margin-bottom: 2px; }
+        .gameInfo p { font-size: 18px; font-weight: bold; color: #fff; }
+
+        #livesDisplay {
+            display: flex;
+            gap: 5px;
+            pointer-events: auto;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
             border-radius: 10px;
-            border: 1px solid #00BFFF;
-            text-align: center;
-            z-index: 10;
-            font-size: 18px;
-            font-weight: bold;
         }
+
+        .heart {
+            width: 25px;
+            height: 25px;
+            background-color: #FF0000;
+            clip-path: polygon(50% 0%, 61% 15%, 98% 15%, 68% 40%, 80% 85%, 50% 65%, 20% 85%, 32% 40%, 2% 15%, 39% 15%);
+            transition: all 0.2s;
+        }
+        .heart.lost { background-color: #555; transform: scale(0.8); opacity: 0.5; }
         
         #bossIndicator {
             position: absolute;
-            top: 80px;
+            top: 60px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(45deg, #FF0000, #FF4500, #FFD700);
-            padding: 10px 30px;
-            border-radius: 20px;
-            font-size: 24px;
+            background: linear-gradient(45deg, #FF0000, #FF4500);
+            padding: 5px 20px;
+            border-radius: 15px;
+            font-size: 18px;
             font-weight: bold;
-            text-shadow: 0 0 10px #FF0000;
-            z-index: 10;
+            z-index: 100;
             display: none;
-            animation: bossGlow 2s infinite alternate;
         }
         
-        @keyframes bossGlow {
-            0% { box-shadow: 0 0 20px #FF0000; }
-            100% { box-shadow: 0 0 40px #FFD700; }
-        }
-        
-        /* 藍色輪盤容器 */
+        /* 輪盤 */
         #wheelContainer {
             position: absolute;
-            width: 400px;
-            height: 400px;
-            left: calc(50% - 200px);
-            top: calc(50% - 200px);
+            width: 300px;
+            height: 300px;
+            top: 40%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 5;
         }
         
-        /* 藍色輪盤本體 */
         #wheel {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: 
-                radial-gradient(circle at 30% 30%, 
-                    #1E90FF 0%, 
-                    #4169E1 25%,
-                    #0000CD 50%,
-                    #000080 75%,
-                    #00004D 100%),
-                repeating-radial-gradient(circle at 50% 50%, 
-                    transparent 0px, 
-                    transparent 12px, 
-                    rgba(0, 191, 255, 0.15) 13px,
-                    transparent 14px,
-                    transparent 25px,
-                    rgba(30, 144, 255, 0.2) 26px,
-                    transparent 27px);
-            box-shadow: 
-                inset 0 0 80px rgba(0, 0, 0, 0.8),
-                inset 0 0 40px rgba(0, 100, 200, 0.6),
-                0 0 60px rgba(30, 144, 255, 0.9),
-                0 0 30px rgba(30, 144, 255, 0.7),
-                0 0 0 15px rgba(0, 100, 200, 0.95),
-                0 0 0 20px rgba(0, 50, 150, 0.8),
-                0 0 0 25px rgba(30, 144, 255, 0.3);
+            background-color: #8B5A2B;
+            background-image: 
+                repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 4px, rgba(60, 30, 0, 0.15) 5px, transparent 6px),
+                repeating-conic-gradient(#8B5A2B 0deg, #A0683C 10deg, #8B5A2B 20deg);
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.8);
+            border: 6px solid #3E2710;
             transform-origin: center center;
-            border: 5px solid #1E90FF;
         }
-        
-        .knife-on-wheel {
-            position: absolute;
-            width: 24px;
-            height: 100px;
-            background: linear-gradient(to right, #C0C0C0, #E0E0E0, #C0C0C0);
-            border-radius: 3px 3px 12px 12px;
-            transform-origin: center bottom;
-            z-index: 6;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-        }
-        
-        .knife-on-wheel::before {
+
+        #wheel::after {
             content: '';
             position: absolute;
-            width: 35px;
-            height: 25px;
-            background-color: #8B0000;
-            border-radius: 6px;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .knife-on-wheel::after {
-            content: '';
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            background-color: #FFD700;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #C0C0C0, #555);
             border-radius: 50%;
-            top: -5px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
+            z-index: 10;
         }
-        
-        .special-knife {
-            background: linear-gradient(45deg, #FFD700, #FF8C00, #FF4500);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.9);
-        }
-        
-        .spike-on-wheel {
+
+        /* 飛刀基本樣式 */
+        .knife {
             position: absolute;
-            width: 15px;
+            width: 12px;
             height: 50px;
-            background: linear-gradient(to bottom, #696969, #A9A9A9);
-            border-radius: 3px;
-            transform-origin: center bottom;
+            background: linear-gradient(to right, #A9A9A9, #E0E0E0, #A9A9A9);
+            border-radius: 4px 4px 2px 2px;
             z-index: 6;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
         }
         
-        .spike-on-wheel::before {
+        /* 不同飛刀樣式 */
+        .knife.basic::before {
             content: '';
             position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 20px solid #A9A9A9;
-            top: -20px;
-            left: -2.5px;
-        }
-        
-        .spike-on-wheel::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background-color: #FF0000;
-            border-radius: 50%;
-            top: -15px;
-            left: 3.5px;
-        }
-        
-        .apple-on-wheel {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: radial-gradient(circle at 30% 30%, #FF0000, #8B0000);
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-            transform-origin: center center;
-            z-index: 6;
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-        }
-        
-        .apple-on-wheel::before {
-            content: '';
-            position: absolute;
-            width: 5px;
-            height: 10px;
-            background-color: #8B4513;
-            border-radius: 2px;
+            width: 20px;
+            height: 14px;
+            background-color: #8B0000;
+            border-radius: 50% 50% 0 0;
             top: -10px;
             left: 50%;
             transform: translateX(-50%);
         }
         
-        .coin {
+        .knife.basic::after {
+            content: '';
             position: absolute;
-            width: 25px;
-            height: 25px;
-            background: radial-gradient(circle at 30% 30%, #FFD700, #B8860B);
+            width: 8px;
+            height: 8px;
+            background-color: #FFD700;
             border-radius: 50%;
-            z-index: 20;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-            display: none;
-            animation: coinSpin 2s linear infinite;
-        }
-        
-        .coin::before {
-            content: '💰';
-            position: absolute;
-            font-size: 16px;
-            top: 50%;
+            top: -4px;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
+        }
+
+        .knife.fire {
+            background: linear-gradient(to right, #FF4500, #FF8C00, #FF4500);
         }
         
-        @keyframes coinSpin {
-            0% { transform: rotateY(0deg); }
-            100% { transform: rotateY(360deg); }
+        .knife.fire::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 14px;
+            background: linear-gradient(to bottom, #FF0000, #8B0000);
+            border-radius: 50% 50% 0 0;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #FF4500;
         }
         
+        .knife.fire::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FFD700, #FF4500);
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: fireGlow 0.5s infinite alternate;
+        }
+
+        @keyframes fireGlow {
+            from { box-shadow: 0 0 5px #FF4500; }
+            to { box-shadow: 0 0 15px #FFD700; }
+        }
+
+        .knife.ice {
+            background: linear-gradient(to right, #00BFFF, #87CEFA, #00BFFF);
+        }
+        
+        .knife.ice::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 14px;
+            background: linear-gradient(to bottom, #00FFFF, #00CED1);
+            border-radius: 50% 50% 0 0;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #00FFFF;
+        }
+        
+        .knife.ice::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FFFFFF, #00BFFF);
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: iceGlow 1s infinite alternate;
+        }
+
+        @keyframes iceGlow {
+            from { box-shadow: 0 0 5px #00FFFF; }
+            to { box-shadow: 0 0 15px #FFFFFF; }
+        }
+
+        .knife.poison {
+            background: linear-gradient(to right, #32CD32, #ADFF2F, #32CD32);
+        }
+        
+        .knife.poison::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 14px;
+            background: linear-gradient(to bottom, #7CFC00, #228B22);
+            border-radius: 50% 50% 0 0;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #32CD32;
+        }
+        
+        .knife.poison::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #ADFF2F, #006400);
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: poisonGlow 0.7s infinite alternate;
+        }
+
+        @keyframes poisonGlow {
+            from { box-shadow: 0 0 5px #32CD32; }
+            to { box-shadow: 0 0 15px #ADFF2F; }
+        }
+
+        .knife.golden {
+            background: linear-gradient(to right, #FFD700, #DAA520, #FFD700);
+        }
+        
+        .knife.golden::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 14px;
+            background: linear-gradient(to bottom, #FFD700, #B8860B);
+            border-radius: 50% 50% 0 0;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #FFD700;
+        }
+        
+        .knife.golden::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FFF, #FFD700);
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #FFD700;
+        }
+
+        /* 玩家控制的飛刀 */
         #playerKnife {
+            left: 50%;
+            bottom: 100px;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        /* 尖刺 */
+        .spike {
+            position: absolute;
+            width: 10px;
+            height: 35px;
+            background: linear-gradient(to bottom, #444, #222);
+            border-radius: 2px;
+            z-index: 6;
+        }
+        
+        .spike::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 12px solid #666;
+            top: -12px;
+            left: -1px;
+        }
+
+        /* 蘋果 - 較小，+10金幣 */
+        .apple {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 30% 30%, #FF0000, #8B0000);
+            border-radius: 50%;
+            z-index: 6;
+        }
+        .apple::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 4px;
+            background: #5D4037;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 香蕉 - 較大，+5金幣 */
+        .banana {
             position: absolute;
             width: 24px;
-            height: 100px;
-            background: linear-gradient(to right, #FFD700, #FFF, #FFD700);
-            border-radius: 3px 3px 12px 12px;
-            left: 50%;
-            bottom: 150px;
-            transform: translateX(-50%);
-            z-index: 10;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 1);
+            height: 12px;
+            background: linear-gradient(to right, #FFD700, #FFA500, #FF8C00);
+            border-radius: 50% 50% 30% 30%;
+            z-index: 6;
+            transform: rotate(-30deg);
         }
-        
-        #playerKnife::before {
+        .banana::before {
             content: '';
             position: absolute;
-            width: 35px;
-            height: 25px;
-            background-color: #8B0000;
-            border-radius: 6px;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
+            width: 3px;
+            height: 6px;
+            background: #8B4513;
+            top: -4px;
+            left: 3px;
+            border-radius: 2px;
         }
-        
-        #playerKnife::after {
-            content: '';
+
+        /* 特殊道具 */
+        .special-item {
             position: absolute;
-            width: 15px;
-            height: 15px;
-            background-color: #FF4500;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            top: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        #controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            position: absolute;
-            bottom: 50px;
-            left: 0;
-            width: 100%;
-            z-index: 10;
-        }
-        
-        #throwButton {
-            background: linear-gradient(to bottom, #00BFFF, #0066CC);
-            color: white;
-            border: none;
-            padding: 18px 50px;
-            font-size: 24px;
-            font-weight: bold;
-            border-radius: 60px;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(0, 191, 255, 0.6);
-            transition: all 0.2s;
-            width: 300px;
-        }
-        
-        #instructions {
-            text-align: center;
-            color: #AAA;
-            font-size: 16px;
-            max-width: 700px;
-            line-height: 1.6;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #00BFFF;
-        }
-        
-        .hit-indicator {
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 8px solid #00BFFF;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
             z-index: 7;
-            pointer-events: none;
-            opacity: 0;
+            animation: float 2s ease-in-out infinite;
+            border: 2px solid rgba(255,255,255,0.8);
         }
-        
-        .coin-indicator {
-            position: absolute;
-            color: #FFD700;
-            font-size: 24px;
-            font-weight: bold;
-            z-index: 21;
-            pointer-events: none;
-            opacity: 0;
-            text-shadow: 0 0 10px #000;
+
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+            50% { transform: translate(-50%, -50%) translateY(-5px); }
         }
-        
+
+        /* UI 文字 */
         .knife-counter {
             position: absolute;
-            bottom: 300px;
+            bottom: 180px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 50, 100, 0.8);
-            padding: 12px 25px;
-            border-radius: 25px;
-            border: 3px solid #00BFFF;
-            font-size: 22px;
-            font-weight: bold;
-            z-index: 5;
-            box-shadow: 0 0 15px rgba(0, 191, 255, 0.7);
-        }
-        
-        #levelComplete, #gameOver {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 100;
-            width: 500px;
-        }
-        
-        #levelComplete {
-            border: 4px solid #FFD700;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.9);
-        }
-        
-        #gameOver {
-            border: 4px solid #FF4500;
-            box-shadow: 0 0 50px rgba(255, 69, 0, 0.9);
-        }
-        
-        #levelComplete h2 {
-            color: #FFD700;
-            font-size: 42px;
-            margin-bottom: 25px;
-            text-shadow: 0 0 10px #FFD700;
-        }
-        
-        #gameOver h2 {
-            color: #FF4500;
-            font-size: 42px;
-            margin-bottom: 25px;
-            text-shadow: 0 0 10px #FF4500;
-        }
-        
-        #levelComplete p, #gameOver p {
             font-size: 24px;
-            margin-bottom: 20px;
-        }
-        
-        #nextLevelButton, #restartButton {
-            background: linear-gradient(to bottom, #FFD700, #FF8C00);
-            color: #000;
-            border: none;
-            padding: 18px 35px;
-            font-size: 22px;
             font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            margin-top: 25px;
-            width: 250px;
+            text-shadow: 0 2px 4px #000;
+            z-index: 50;
         }
-        
-        #restartButton {
-            background: linear-gradient(to bottom, #FF4500, #8B0000);
+
+        #controls {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .btn {
+            background: linear-gradient(to bottom, #8B4513, #5D3A1A);
+            border: 2px solid #A0683C;
             color: white;
+            padding: 10px 40px;
+            font-size: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
         }
-        
-        .keyHint {
-            display: inline-block;
-            background-color: #333;
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 2px solid #666;
-            margin: 0 5px;
-            font-weight: bold;
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(139, 69, 19, 0.7);
         }
-        
-        #shopPanel {
+
+        /* 面板樣式 */
+        .modal {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            border: 4px solid #FFD700;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.9);
-            display: none;
-            z-index: 100;
-            width: 600px;
-        }
-        
-        #shopPanel h2 {
-            color: #FFD700;
-            font-size: 36px;
-            margin-bottom: 30px;
+            background: rgba(20, 10, 5, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #FFD700;
             text-align: center;
+            z-index: 2500;
+            min-width: 300px;
+            display: none;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
         }
         
-        .knife-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .modal h2 { margin-bottom: 15px; color: #FFD700; }
+        .modal p { margin-bottom: 10px; color: #fff; }
         
-        .knife-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .knife-preview {
-            width: 40px;
-            height: 120px;
-            background: linear-gradient(to right, #C0C0C0, #E0E0E0, #C0C0C0);
-            border-radius: 3px 3px 12px 12px;
-        }
-        
-        .knife-name {
+        /* 提示訊息 */
+        .toast {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
             font-size: 20px;
             font-weight: bold;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 3000;
+            white-space: nowrap;
         }
-        
-        .knife-price {
-            color: #FFD700;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .buy-button {
-            background: linear-gradient(to bottom, #32CD32, #228B22);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .buy-button:disabled {
-            background: linear-gradient(to bottom, #666, #444);
-            cursor: not-allowed;
-        }
-        
-        #closeShop {
+
+        /* 新添加的視覺效果 */
+        .hit-effect {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            color: white;
-            border: none;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(255,215,0,0.8), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            animation: hitEffect 0.5s forwards;
+        }
+
+        @keyframes hitEffect {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .score-popup {
+            position: absolute;
+            color: #FFD700;
             font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #000;
+            animation: popup 1s forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes popup {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        .combo-indicator {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FF4500;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255,69,0,0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 150;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 2px solid #FF4500;
+        }
+
+        .multiplier-display {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF4500;
+            text-shadow: 0 0 10px #FF4500;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 2px solid #FF4500;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 150;
+        }
+
+        /* 模式選擇按鈕 */
+        .mode-btn {
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            border: 2px solid #D2691E;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
             cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 5px;
         }
         
-        #shopButton {
+        .mode-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #FFD700;
+        }
+        
+        .mode-btn.selected {
+            background: linear-gradient(45deg, #D2691E, #FF8C00);
+            box-shadow: 0 0 20px #FFD700;
+        }
+
+        /* 金幣顯示 */
+        #coinsDisplay {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: linear-gradient(to bottom, #FFD700, #B8860B);
-            color: #000;
-            border: none;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #FFD700;
+            color: #FFD700;
+            font-weight: bold;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coins-icon {
+            color: #FFD700;
+            font-size: 18px;
+        }
+
+        /* 商店按鈕 */
+        .shop-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(45deg, #D2691E, #FF8C00);
+            border: 2px solid #FFD700;
+            color: white;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .shop-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255,215,0,0.8);
+        }
+
+        /* 商店樣式 */
+        .shop-item {
+            background: rgba(50, 25, 10, 0.8);
+            border: 2px solid #8B4513;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .shop-item:hover {
+            background: rgba(80, 40, 20, 0.9);
+            transform: translateX(5px);
+            border-color: #FFD700;
+        }
+
+        .shop-item.equipped {
+            border-color: #32CD32;
+            box-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
+        }
+
+        .shop-item.owned {
+            border-color: #FFD700;
+        }
+
+        .shop-item.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .knife-preview {
+            width: 60px;
+            height: 100px;
+            position: relative;
+        }
+
+        .knife-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFD700;
+            flex: 1;
+        }
+
+        .knife-price {
+            font-size: 16px;
+            color: #32CD32;
+            font-weight: bold;
+        }
+
+        .knife-stats {
+            font-size: 12px;
+            color: #CCC;
+            margin-top: 5px;
+        }
+
+        .buy-btn {
+            background: linear-gradient(to bottom, #32CD32, #228B22);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
-            z-index: 10;
+            transition: all 0.2s;
+        }
+
+        .buy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #32CD32;
+        }
+
+        .buy-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .equip-btn {
+            background: linear-gradient(to bottom, #FFD700, #DAA520);
+            border: none;
+            color: black;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .equip-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #FFD700;
+        }
+
+        .equip-btn.equipped {
+            background: linear-gradient(to bottom, #32CD32, #228B22);
+            color: white;
+        }
+
+        /* 選項卡 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(80, 40, 20, 0.8);
+            border: 1px solid #8B4513;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: rgba(100, 50, 25, 0.9);
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #D2691E, #FF8C00);
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        /* 特效描述 */
+        .effect-info {
+            font-size: 12px;
+            color: #87CEFA;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        /* 成就通知 */
+        .achievement-notification {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #4a2c20, #2a1a10);
+            border: 3px solid #FFD700;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 4000;
+            animation: slideInRight 0.5s forwards, fadeOut 0.5s 2.5s forwards;
+            min-width: 250px;
         }
         
-        @keyframes knifeThrow {
-            0% { 
-                bottom: 150px; 
-                transform: translateX(-50%) rotate(0deg);
-            }
-            50% { 
-                bottom: 300px; 
-                transform: translateX(-50%) rotate(0deg);
-            }
-            100% { 
-                bottom: 380px; 
-                transform: translateX(-50%) rotate(0deg);
-            }
+        @keyframes slideInRight {
+            from { transform: translateX(100%) translateY(-50%); }
+            to { transform: translateX(0) translateY(-50%); }
         }
         
-        @keyframes hitEffect {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-            70% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.4); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
-        }
-        
-        @keyframes pulse {
-            0% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.15); }
-            100% { transform: translateX(-50%) scale(1); }
-        }
-        
-        @keyframes knifeAppear {
-            0% { transform: scale(0); }
-            70% { transform: scale(1.3); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes coinCollect {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
     </style>
 </head>
 <body>
+
+    <!-- 開始畫面 -->
+    <div id="startScreen" class="overlay-screen">
+        <div id="startBox">
+            <h1 id="startTitle">Ninja飛刀大挑戰</h1>
+            <div id="modeSelection">
+                <h3 style="color:#FFD700; margin-bottom:20px;">選擇遊戲模式</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="mode-btn" data-mode="classic">經典模式</button>
+                    <button class="mode-btn" data-mode="survival">生存模式</button>
+                    <button class="mode-btn" data-mode="challenge">挑戰模式</button>
+                    <button class="mode-btn" data-mode="boss_rush">Boss 連戰</button>
+                </div>
+            </div>
+            <p style="color:#ddd; font-size:18px; margin-top:20px;">按下 <span class="blink">空白鍵</span> 開始</p>
+            <p style="color:#888; font-size:14px; margin-top:10px;">碰到其他飛刀扣血，碰到尖刺直接輸</p>
+            <p style="color:#FFD700; font-size:14px; margin-top:5px;">目標：成功插滿飛刀即可過關</p>
+            <button id="shopAccessBtn" class="btn" style="margin-top: 20px;">進入商店</button>
+        </div>
+    </div>
+
+    <!-- 升級動畫 -->
+    <div id="levelTransition" class="overlay-screen">
+        <h1 style="color: #FFD700; font-size: 50px; text-shadow: 0 0 10px red;">難度升級！</h1>
+        <h2 id="transitionLevelText" style="color: #FFF; margin-top: 10px;">Level 2</h2>
+    </div>
+
     <div id="gameContainer">
-        <h1 id="gameTitle">Ninja飛刀大挑戰</h1>
-        
         <div id="header">
             <div class="gameInfo">
                 <h3>關卡</h3>
@@ -607,797 +870,1305 @@
                 <h3>分數</h3>
                 <p id="scoreDisplay">0</p>
             </div>
-            <div class="gameInfo">
-                <h3>金幣</h3>
-                <p id="coinDisplay">0</p>
-            </div>
-            <div class="gameInfo">
-                <h3>飛刀數</h3>
-                <p id="knivesDisplay">5/5</p>
+            <div id="livesDisplay">
+                <div class="heart"></div>
+                <div class="heart"></div>
+                <div class="heart"></div>
             </div>
         </div>
         
-        <div id="speedInfo">旋轉速度: 1.0x</div>
-        <div id="bossIndicator">Boss 關卡！</div>
+        <div id="coinsDisplay">
+            <span class="coins-icon">💰</span>
+            <span id="coinsAmount">0</span>
+        </div>
         
-        <button id="shopButton">商店 💰</button>
+        <button id="shopBtn" class="shop-btn" onclick="openShop()">
+            <span>🛒</span>
+            <span>商店</span>
+        </button>
+        
+        <div id="bossIndicator">Boss 關卡！</div>
+        <div id="comboDisplay" class="combo-indicator">連擊: 0</div>
+        <div id="multiplierDisplay" class="multiplier-display">x1</div>
         
         <div id="wheelContainer">
             <div id="wheel"></div>
         </div>
         
-        <div id="playerKnife"></div>
-        <div class="hit-indicator" id="hitIndicator"></div>
-        <div class="knife-counter" id="knifeCounter">飛刀: 5/5</div>
+        <!-- 玩家控制的飛刀 -->
+        <div id="playerKnife" class="knife basic"></div>
         
-        <div id="levelComplete">
-            <h2>關卡完成！</h2>
-            <p>你成功將所有飛刀插上輪盤！</p>
-            <p>獲得金幣: <span id="levelCoins">10</span></p>
-            <p>獲得分數: <span id="levelScore">100</span></p>
-            <button id="nextLevelButton">下一關</button>
-        </div>
-        
-        <div id="gameOver">
-            <h2>遊戲結束！</h2>
-            <p id="gameOverReason">你碰到了輪盤上的飛刀！</p>
-            <p>最終分數: <span id="finalScore">0</span></p>
-            <p>獲得金幣: <span id="finalCoins">0</span> (金幣已保存)</p>
-            <button id="restartButton">重新開始</button>
-        </div>
-        
-        <div id="shopPanel">
-            <button id="closeShop">✕</button>
-            <h2>飛刀商店</h2>
-            <div id="knifeShopItems">
-                <!-- 飛刀商品會通過JavaScript動態生成 -->
-            </div>
-        </div>
+        <div class="knife-counter" id="knifeCounter">已插: 0/5</div>
         
         <div id="controls">
-            <button id="throwButton">投擲飛刀 (空格鍵)</button>
-            <div id="instructions">
-                <p>遊戲規則: 將所有飛刀插到旋轉的藍色輪盤上，避免碰到已插上的飛刀或尖刺。</p>
-                <p>操作: 按下 <span class="keyHint">空格鍵</span> 或 <span class="keyHint">點擊按鈕</span> 投擲飛刀</p>
-            </div>
+            <button id="throwBtn" class="btn">投擲 (空白鍵)</button>
         </div>
     </div>
 
+    <!-- 遊戲結束/完成面板 -->
+    <div id="gameOverModal" class="modal">
+        <h2 id="goTitle">遊戲結束</h2>
+        <p id="goReason">原因</p>
+        <p>分數: <span id="goScore">0</span></p>
+        <p>最大連擊: <span id="goCombo">0</span></p>
+        <p>獲得金幣: <span id="goCoins">0</span></p>
+        <button class="btn" onclick="initGame()">重新開始</button>
+        <button class="btn" onclick="returnToMenu()">返回主選單</button>
+    </div>
+
+    <div id="levelCompleteModal" class="modal">
+        <h2>關卡完成！</h2>
+        <p>成功插滿 <span id="lcKnives">0</span> 把飛刀</p>
+        <p>獲得分數: <span id="lcScore">0</span></p>
+        <p>獲得金幣: +<span id="lcCoins">50</span></p>
+        <button class="btn" onclick="nextLevelWithAnim()">下一關</button>
+    </div>
+
+    <!-- 商店面板 -->
+    <div id="shopModal" class="modal">
+        <h2>飛刀商店</h2>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('knives')">飛刀</div>
+            <div class="tab" onclick="switchTab('effects')">特效</div>
+            <div class="tab" onclick="switchTab('boosts')">強化</div>
+        </div>
+        
+        <div id="shopContent">
+            <!-- 商品內容會在這裡動態生成 -->
+        </div>
+        
+        <button class="btn" onclick="closeShop()" style="margin-top: 20px;">返回遊戲</button>
+    </div>
+
+    <!-- 提示框 -->
+    <div id="toast" class="toast"></div>
+
     <script>
-        // 遊戲變數
-        let game = {
+        // 遊戲配置
+        const CONFIG = {
+            wheelRadius: 150,
+            knifeSpeed: 25,
+            collisionTolerance: 8,
+            comboThreshold: 3,
+            perfectHitRange: 5,
+            specialItemChance: 0.15,
+            maxKnives: 10
+        };
+
+        // 遊戲模式
+        const GAME_MODES = {
+            CLASSIC: 'classic',
+            SURVIVAL: 'survival',
+            CHALLENGE: 'challenge',
+            BOSS_RUSH: 'boss_rush'
+        };
+
+        // 飛刀類型定義
+        const KNIFE_TYPES = {
+            basic: {
+                name: "基本飛刀",
+                description: "普通的忍者飛刀",
+                price: 0,
+                owned: true,
+                equipped: true,
+                stats: {
+                    damage: 1,
+                    speed: 1,
+                    specialEffect: null
+                }
+            },
+            fire: {
+                name: "火焰飛刀",
+                description: "燃燒的火焰之刃",
+                price: 500,
+                owned: false,
+                equipped: false,
+                stats: {
+                    damage: 1.2,
+                    speed: 1,
+                    specialEffect: "有機率點燃目標"
+                }
+            },
+            ice: {
+                name: "寒冰飛刀",
+                description: "冰冷的霜凍之刃",
+                price: 800,
+                owned: false,
+                equipped: false,
+                stats: {
+                    damage: 1,
+                    speed: 0.9,
+                    specialEffect: "減慢目標速度"
+                }
+            },
+            poison: {
+                name: "毒藥飛刀",
+                description: "塗抹劇毒的刀刃",
+                price: 1200,
+                owned: false,
+                equipped: false,
+                stats: {
+                    damage: 1.5,
+                    speed: 1,
+                    specialEffect: "持續傷害效果"
+                }
+            },
+            golden: {
+                name: "黃金飛刀",
+                description: "純金打造的奢華飛刀",
+                price: 2000,
+                owned: false,
+                equipped: false,
+                stats: {
+                    damage: 1,
+                    speed: 1,
+                    specialEffect: "獲得金幣+50%"
+                }
+            }
+        };
+
+        // 成就系統
+        const ACHIEVEMENTS = {
+            PERFECT_10: { name: "神準", desc: "連續10次完美命中", unlocked: false, reward: 100 },
+            COMBO_KING: { name: "連擊王", desc: "達到20連擊", unlocked: false, reward: 150 },
+            SURVIVAL_MASTER: { name: "生存大師", desc: "生存模式達到500分", unlocked: false, reward: 200 },
+            BOSS_SLAYER: { name: "Boss殺手", desc: "擊敗10個Boss", unlocked: false, reward: 300 },
+            PERFECT_GAME: { name: "完美遊戲", desc: "一命通關5關", unlocked: false, reward: 500 },
+            RICH_NINJA: { name: "富有忍者", desc: "擁有10000金幣", unlocked: false, reward: 2000 }
+        };
+
+        let state = {
             level: 1,
             score: 0,
             coins: 0,
-            knives: 5,
-            maxKnives: 5,
-            knivesThrown: 0,
-            wheelRotation: 0,
-            rotationSpeed: 1.0, // 初始速度1.0
-            gameActive: true,
-            knivesOnWheel: [],
-            spikesOnWheel: [],
-            applesOnWheel: [],
-            ownedKnives: ['gold'],
-            currentKnife: 'gold',
-            isBossLevel: false
-        };
-        
-        // 從localStorage載入保存的金幣
-        function loadSavedCoins() {
-            const savedCoins = localStorage.getItem('ninjaKnifeCoins');
-            if (savedCoins) {
-                game.coins = parseInt(savedCoins);
-                console.log(`載入保存的金幣: ${game.coins}`);
-            }
-        }
-        
-        // 保存金幣到localStorage
-        function saveCoins() {
-            localStorage.setItem('ninjaKnifeCoins', game.coins);
-            console.log(`保存金幣: ${game.coins}`);
-        }
-        
-        // 飛刀類型定義
-        const knifeTypes = {
-            'gold': {
-                name: '黃金飛刀',
-                price: 0,
-                color: 'linear-gradient(to right, #FFD700, #FFF, #FFD700)',
-                owned: true,
-                special: false
-            },
-            'silver': {
-                name: '白銀飛刀',
-                price: 50,
-                color: 'linear-gradient(to right, #C0C0C0, #E0E0E0, #C0C0C0)',
-                owned: false,
-                special: false
-            },
-            'dragon': {
-                name: '龍紋飛刀',
-                price: 150,
-                color: 'linear-gradient(45deg, #FF4500, #FF8C00, #FFD700)',
-                owned: false,
-                special: true
-            },
-            'ice': {
-                name: '寒冰飛刀',
-                price: 100,
-                color: 'linear-gradient(to right, #00FFFF, #E0FFFF, #00FFFF)',
-                owned: false,
-                special: true
-            },
-            'shadow': {
-                name: '暗影飛刀',
-                price: 200,
-                color: 'linear-gradient(to right, #4B0082, #8A2BE2, #4B0082)',
-                owned: false,
-                special: true
+            lives: 3,
+            knivesRequired: 5,
+            knivesStuck: 0,
+            wheelAngle: 0,
+            wheelSpeed: 1.5,
+            wheelDirection: 1,
+            isPlaying: false,
+            isThrowing: false,
+            lastSwitchTime: 0,
+            switchInterval: 4000,
+            objects: [],
+            specialItems: [],
+            combo: 0,
+            maxCombo: 0,
+            multiplier: 1,
+            perfectHitCount: 0,
+            streak: 0,
+            playerPos: { bottom: 100 },
+            gameMode: GAME_MODES.CLASSIC,
+            bossDefeated: 0,
+            perfectLevels: 0,
+            achievements: {},
+            currentKnife: 'basic',
+            ownedKnives: ['basic'],
+            equippedKnives: ['basic'],
+            shopData: {},
+            gameBoosts: {
+                extraLife: 0,
+                scoreMultiplier: 1,
+                coinMultiplier: 1
             }
         };
-        
-        // 輪盤參數
-        const WHEEL_RADIUS = 180;
-        const WHEEL_CONTAINER_SIZE = 400;
-        const HIT_TOLERANCE = 12;
-        const MIN_ANGLE_DISTANCE = 18;
-        
-        // DOM元素
-        const wheelContainer = document.getElementById('wheelContainer');
+
+        // DOM 元素
         const wheel = document.getElementById('wheel');
+        const wheelContainer = document.getElementById('wheelContainer');
         const playerKnife = document.getElementById('playerKnife');
-        const hitIndicator = document.getElementById('hitIndicator');
-        const knifeCounter = document.getElementById('knifeCounter');
-        const levelDisplay = document.getElementById('levelDisplay');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const coinDisplay = document.getElementById('coinDisplay');
-        const knivesDisplay = document.getElementById('knivesDisplay');
-        const throwButton = document.getElementById('throwButton');
-        const levelCompleteScreen = document.getElementById('levelComplete');
-        const gameOverScreen = document.getElementById('gameOver');
-        const nextLevelButton = document.getElementById('nextLevelButton');
-        const restartButton = document.getElementById('restartButton');
-        const bossIndicator = document.getElementById('bossIndicator');
-        const shopButton = document.getElementById('shopButton');
-        const shopPanel = document.getElementById('shopPanel');
-        const closeShop = document.getElementById('closeShop');
-        const knifeShopItems = document.getElementById('knifeShopItems');
-        const speedInfo = document.getElementById('speedInfo');
-        
-        // 初始化遊戲
-        function initGame() {
-            game.level = 1;
-            game.score = 0;
-            // 保留金幣不重置，只載入已保存的
-            loadSavedCoins();
-            game.knives = 5;
-            game.maxKnives = 5;
-            game.knivesThrown = 0;
-            game.wheelRotation = 0;
-            game.rotationSpeed = 1.0; // 重置為基礎速度1.0
-            game.gameActive = true;
-            game.knivesOnWheel = [];
-            game.spikesOnWheel = [];
-            game.applesOnWheel = [];
-            game.currentKnife = 'gold';
-            game.isBossLevel = false;
+        const startScreen = document.getElementById('startScreen');
+        const levelTransition = document.getElementById('levelTransition');
+        const toastEl = document.getElementById('toast');
+        const comboDisplay = document.getElementById('comboDisplay');
+        const multiplierDisplay = document.getElementById('multiplierDisplay');
+        const coinsDisplay = document.getElementById('coinsAmount');
+        const shopBtn = document.getElementById('shopBtn');
+        const shopModal = document.getElementById('shopModal');
+
+        // 初始化
+        window.onload = () => {
+            loadGameData();
+            setupInputs();
+            createModeSelection();
+            gameLoop();
+        };
+
+        function loadGameData() {
+            // 注意：這裡我們只載入已保存的數據，但每次重新進入遊戲時金幣應該清零
+            // 所以我們在 startGame() 中重置金幣
             
-            // 更新顯示
-            updateDisplays();
-            updateKnifeCounter();
-            updateSpeedDisplay();
-            updatePlayerKnifeAppearance();
+            const savedAchievements = localStorage.getItem('ninja_achievements');
+            if(savedAchievements) {
+                state.achievements = JSON.parse(savedAchievements);
+                Object.keys(ACHIEVEMENTS).forEach(key => {
+                    if(state.achievements[key]) {
+                        ACHIEVEMENTS[key].unlocked = true;
+                    }
+                });
+            }
             
-            // 清除所有物件
-            document.querySelectorAll('.knife-on-wheel, .spike-on-wheel, .apple-on-wheel, .coin').forEach(el => el.remove());
+            const savedShopData = localStorage.getItem('ninja_shop');
+            if(savedShopData) {
+                state.shopData = JSON.parse(savedShopData);
+                // 更新飛刀擁有狀態
+                if(state.shopData.ownedKnives) {
+                    state.ownedKnives = state.shopData.ownedKnives;
+                }
+                if(state.shopData.currentKnife) {
+                    state.currentKnife = state.shopData.currentKnife;
+                    updatePlayerKnifeAppearance();
+                }
+                if(state.shopData.gameBoosts) {
+                    state.gameBoosts = state.shopData.gameBoosts;
+                }
+            }
             
-            // 隱藏畫面
-            levelCompleteScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            bossIndicator.style.display = 'none';
-            shopPanel.style.display = 'none';
-            
-            // 重置玩家飛刀位置
-            playerKnife.style.bottom = '150px';
-            playerKnife.style.transform = 'translateX(-50%)';
-            playerKnife.style.display = 'block';
-            
-            // 重置輪盤旋轉
-            wheel.style.transform = 'translate(-50%, -50%) rotate(0deg)';
-            
-            // 設置關卡
-            setupLevel();
-            
-            // 初始化商店
-            initShop();
-            
-            // 開始遊戲循環
-            requestAnimationFrame(gameLoop);
-            
-            console.log(`遊戲開始，當前金幣: ${game.coins}, 速度: ${game.rotationSpeed}`);
+            updateCoinsDisplay();
         }
-        
-        // 更新速度顯示
-        function updateSpeedDisplay() {
-            speedInfo.textContent = `旋轉速度: ${game.rotationSpeed.toFixed(1)}x`;
-        }
-        
-        // 初始化商店
-        function initShop() {
-            knifeShopItems.innerHTML = '';
+
+        function saveGameData() {
+            localStorage.setItem('ninja_gameMode', state.gameMode);
+            localStorage.setItem('ninja_achievements', JSON.stringify(state.achievements));
             
-            Object.entries(knifeTypes).forEach(([id, knife]) => {
-                if (id === 'gold') return;
+            // 保存商店數據
+            state.shopData = {
+                ownedKnives: state.ownedKnives,
+                currentKnife: state.currentKnife,
+                gameBoosts: state.gameBoosts
+            };
+            localStorage.setItem('ninja_shop', JSON.stringify(state.shopData));
+        }
+
+        function setupInputs() {
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    if (!state.isPlaying && startScreen.style.display !== 'none') {
+                        startGame();
+                    } else if (state.isPlaying) {
+                        throwKnife();
+                    }
+                }
                 
-                const item = document.createElement('div');
-                item.className = 'knife-item';
+                // 快捷鍵：R重新開始，M返回選單，S商店
+                if (e.code === 'KeyR' && !startScreen.style.display) {
+                    initGame();
+                }
+                if (e.code === 'KeyM' && !startScreen.style.display) {
+                    returnToMenu();
+                }
+                if (e.code === 'KeyS' && state.isPlaying) {
+                    openShop();
+                }
+            });
+
+            document.getElementById('throwBtn').addEventListener('click', () => {
+                if (!state.isPlaying && startScreen.style.display !== 'none') {
+                    startGame();
+                } else if (state.isPlaying) {
+                    throwKnife();
+                }
+            });
+
+            document.getElementById('shopAccessBtn').addEventListener('click', openShop);
+
+            startScreen.addEventListener('click', (e) => {
+                if(e.target.closest('#startBox')) startGame();
+            });
+        }
+
+        function createModeSelection() {
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            modeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modeButtons.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    state.gameMode = btn.dataset.mode;
+                    localStorage.setItem('ninja_gameMode', state.gameMode);
+                });
                 
-                item.innerHTML = `
-                    <div class="knife-info">
-                        <div class="knife-preview" style="background: ${knife.color};"></div>
-                        <div>
-                            <div class="knife-name">${knife.name}</div>
-                            <div class="knife-price">💰 ${knife.price} 金幣</div>
-                        </div>
-                    </div>
-                    <button class="buy-button" data-id="${id}" ${knife.owned || game.coins < knife.price ? 'disabled' : ''}>
-                        ${knife.owned ? '已擁有' : '購買'}
-                    </button>
+                if(btn.dataset.mode === state.gameMode) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        // 商店功能
+        function openShop() {
+            state.isPlaying = false;
+            shopModal.style.display = 'block';
+            renderShopContent('knives');
+        }
+
+        function closeShop() {
+            shopModal.style.display = 'none';
+            if(state.gameMode !== '') {
+                state.isPlaying = true;
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            renderShopContent(tabName);
+        }
+
+        function renderShopContent(tabName) {
+            const shopContent = document.getElementById('shopContent');
+            shopContent.innerHTML = '';
+            
+            switch(tabName) {
+                case 'knives':
+                    renderKnivesShop();
+                    break;
+                case 'effects':
+                    renderEffectsShop();
+                    break;
+                case 'boosts':
+                    renderBoostsShop();
+                    break;
+            }
+        }
+
+        function renderKnivesShop() {
+            const shopContent = document.getElementById('shopContent');
+            
+            Object.entries(KNIFE_TYPES).forEach(([id, knife]) => {
+                const isOwned = state.ownedKnives.includes(id);
+                const isEquipped = state.currentKnife === id;
+                const canAfford = state.coins >= knife.price;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `shop-item ${isOwned ? 'owned' : ''} ${isEquipped ? 'equipped' : ''}`;
+                
+                // 創建預覽圖
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'knife-preview';
+                const previewKnife = document.createElement('div');
+                previewKnife.className = `knife ${id}`;
+                previewKnife.style.position = 'absolute';
+                previewKnife.style.left = '50%';
+                previewKnife.style.top = '50%';
+                previewKnife.style.transform = 'translate(-50%, -50%)';
+                previewDiv.appendChild(previewKnife);
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.style.flex = '1';
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'knife-name';
+                nameDiv.textContent = knife.name;
+                
+                const descDiv = document.createElement('div');
+                descDiv.className = 'knife-stats';
+                descDiv.textContent = knife.description;
+                
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'knife-stats';
+                statsDiv.innerHTML = `
+                    傷害: ${knife.stats.damage}x |
+                    速度: ${knife.stats.speed}x
+                    ${knife.stats.specialEffect ? `<div class="effect-info">效果: ${knife.stats.specialEffect}</div>` : ''}
                 `;
                 
-                knifeShopItems.appendChild(item);
-            });
-            
-            // 添加購買事件監聽器
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const knifeId = this.getAttribute('data-id');
-                    buyKnife(knifeId);
-                });
-            });
-        }
-        
-        // 購買飛刀
-        function buyKnife(knifeId) {
-            const knife = knifeTypes[knifeId];
-            
-            if (game.coins >= knife.price && !knife.owned) {
-                game.coins -= knife.price;
-                knife.owned = true;
-                game.ownedKnives.push(knifeId);
-                saveCoins(); // 購買後保存金幣
-                updateDisplays();
-                initShop();
+                infoDiv.appendChild(nameDiv);
+                infoDiv.appendChild(descDiv);
+                infoDiv.appendChild(statsDiv);
                 
-                showMessage(`成功購買 ${knife.name}！`);
+                const actionDiv = document.createElement('div');
+                
+                if (isOwned) {
+                    const equipBtn = document.createElement('button');
+                    equipBtn.className = `equip-btn ${isEquipped ? 'equipped' : ''}`;
+                    equipBtn.textContent = isEquipped ? '已裝備' : '裝備';
+                    equipBtn.onclick = () => equipKnife(id);
+                    equipBtn.disabled = isEquipped;
+                    actionDiv.appendChild(equipBtn);
+                } else {
+                    const priceDiv = document.createElement('div');
+                    priceDiv.className = 'knife-price';
+                    priceDiv.innerHTML = `💰 ${knife.price}`;
+                    actionDiv.appendChild(priceDiv);
+                    
+                    const buyBtn = document.createElement('button');
+                    buyBtn.className = 'buy-btn';
+                    buyBtn.textContent = '購買';
+                    buyBtn.onclick = () => buyKnife(id, knife.price);
+                    buyBtn.disabled = !canAfford;
+                    actionDiv.appendChild(buyBtn);
+                }
+                
+                itemDiv.appendChild(previewDiv);
+                itemDiv.appendChild(infoDiv);
+                itemDiv.appendChild(actionDiv);
+                shopContent.appendChild(itemDiv);
+            });
+        }
+
+        function renderEffectsShop() {
+            const shopContent = document.getElementById('shopContent');
+            shopContent.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h3 style="color:#FFD700;">特效商店</h3>
+                    <p style="color:#CCC; margin: 10px 0;">為你的飛刀添加炫酷特效！</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                        <div class="shop-item">
+                            <div style="font-size: 30px;">✨</div>
+                            <div style="flex:1;">
+                                <div class="knife-name">星光特效</div>
+                                <div class="knife-stats">讓飛刀拖著星光軌跡</div>
+                                <div class="knife-price">💰 300</div>
+                            </div>
+                            <button class="buy-btn">購買</button>
+                        </div>
+                        <div class="shop-item">
+                            <div style="font-size: 30px;">💥</div>
+                            <div style="flex:1;">
+                                <div class="knife-name">爆炸特效</div>
+                                <div class="knife-stats">擊中時產生爆炸效果</div>
+                                <div class="knife-price">💰 500</div>
+                            </div>
+                            <button class="buy-btn">購買</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBoostsShop() {
+            const shopContent = document.getElementById('shopContent');
+            shopContent.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h3 style="color:#FFD700;">強化道具</h3>
+                    <p style="color:#CCC; margin: 10px 0;">購買臨時強化效果！</p>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px;">
+                        <div class="shop-item">
+                            <div style="font-size: 30px;">❤️</div>
+                            <div style="flex:1;">
+                                <div class="knife-name">額外生命</div>
+                                <div class="knife-stats">+1 最大生命值</div>
+                                <div class="knife-price">💰 200/個</div>
+                            </div>
+                            <button class="buy-btn" onclick="buyBoost('extraLife', 200)">購買</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buyKnife(knifeId, price) {
+            if(state.coins >= price) {
+                state.coins -= price;
+                state.ownedKnives.push(knifeId);
+                showToast(`購買成功: ${KNIFE_TYPES[knifeId].name}`);
+                updateCoinsDisplay();
+                saveGameData();
+                renderShopContent('knives');
+            } else {
+                showToast("金幣不足！");
             }
         }
-        
-        // 更新玩家飛刀外觀
+
+        function equipKnife(knifeId) {
+            state.currentKnife = knifeId;
+            updatePlayerKnifeAppearance();
+            saveGameData();
+            renderShopContent('knives');
+            showToast(`裝備: ${KNIFE_TYPES[knifeId].name}`);
+        }
+
+        function buyBoost(boostType, price) {
+            if(state.coins >= price) {
+                state.coins -= price;
+                
+                switch(boostType) {
+                    case 'extraLife':
+                        state.gameBoosts.extraLife++;
+                        showToast("獲得額外生命！");
+                        break;
+                }
+                
+                updateCoinsDisplay();
+                saveGameData();
+                renderShopContent('boosts');
+            } else {
+                showToast("金幣不足！");
+            }
+        }
+
         function updatePlayerKnifeAppearance() {
-            const knife = knifeTypes[game.currentKnife];
-            playerKnife.style.background = knife.color;
+            playerKnife.className = `knife ${state.currentKnife}`;
+        }
+
+        function startGame() {
+            const savedMode = localStorage.getItem('ninja_gameMode');
+            if(savedMode) state.gameMode = savedMode;
             
-            if (knife.special) {
-                playerKnife.classList.add('special-knife');
-            } else {
-                playerKnife.classList.remove('special-knife');
+            startScreen.style.display = 'none';
+            resetGameData();
+            setupLevel(1);
+            
+            // 應用強化效果
+            if(state.gameBoosts.extraLife > 0) {
+                state.lives += state.gameBoosts.extraLife;
+                for(let i = 3; i < state.lives; i++) {
+                    const extraHeart = document.createElement('div');
+                    extraHeart.className = 'heart';
+                    extraHeart.style.background = '#32CD32';
+                    document.getElementById('livesDisplay').appendChild(extraHeart);
+                }
             }
         }
-        
-        // 設置關卡 - 只在進入新關卡時增加速度
-        function setupLevel() {
-            // 檢查是否為Boss關卡
-            game.isBossLevel = (game.level % 5 === 0);
-            
-            if (game.isBossLevel) {
-                bossIndicator.style.display = 'block';
-                game.maxKnives = 15;
-                // Boss關卡速度稍快，但仍只比普通關卡快一點
-                game.rotationSpeed = 1.0 + (Math.floor(game.level / 5) * 0.3);
-            } else {
-                bossIndicator.style.display = 'none';
-                game.maxKnives = Math.min(5 + Math.floor(game.level / 2), 18);
-                // 普通關卡：每關增加0.1速度
-                game.rotationSpeed = 1.0 + ((game.level - 1) * 0.1);
+
+        function resetGameData() {
+            state.score = 0;
+            state.level = 1;
+            state.lives = 3;
+            state.coins = 0; // 每次開始遊戲時金幣清零
+            state.knivesStuck = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.multiplier = 1;
+            state.perfectHitCount = 0;
+            state.streak = 0;
+            state.perfectLevels = 0;
+            resetHearts();
+            updateUI();
+        }
+
+        function resetHearts() {
+            const heartsDiv = document.getElementById('livesDisplay');
+            heartsDiv.innerHTML = '';
+            for(let i = 0; i < state.lives; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heartsDiv.appendChild(heart);
             }
+        }
+
+        function setupLevel(lvl) {
+            state.level = lvl;
+            state.isPlaying = true;
+            state.isThrowing = false;
             
-            game.knives = game.maxKnives;
-            game.knivesThrown = 0;
+            // 設置每關需要插滿的飛刀數量
+            state.knivesRequired = Math.min(5 + Math.floor(lvl/2), 15);
+            state.knivesStuck = 0;
             
-            // 清除輪盤上的物件
-            game.knivesOnWheel = [];
-            game.spikesOnWheel = [];
-            game.applesOnWheel = [];
-            document.querySelectorAll('.knife-on-wheel, .spike-on-wheel, .apple-on-wheel').forEach(el => el.remove());
+            state.wheelAngle = 0;
+            state.wheelDirection = 1;
+            state.objects = [];
+            state.specialItems = [];
             
-            // 隨機放置尖刺
-            const spikeCount = game.isBossLevel ? 6 : 2 + Math.floor(game.level / 3);
+            const oldItems = wheelContainer.querySelectorAll('.knife, .spike, .apple, .banana, .special-item');
+            oldItems.forEach(el => el.remove());
+
+            resetPlayerKnife();
+
+            const isBoss = (state.gameMode === GAME_MODES.BOSS_RUSH) || (lvl % 5 === 0);
+            document.getElementById('bossIndicator').style.display = isBoss ? 'block' : 'none';
+            
+            if(isBoss) {
+                state.wheelSpeed = 3.0 + (state.bossDefeated * 0.2);
+                state.switchInterval = Math.max(800, 2000 - state.bossDefeated * 100);
+            } else {
+                state.wheelSpeed = 1.0 + lvl * 0.15;
+                state.switchInterval = Math.max(1500, 4000 - lvl * 200);
+            }
+
+            // 生成已有的飛刀
+            const existingKnives = Math.min(Math.floor(lvl/2), 4);
             const usedAngles = [];
             
-            for (let i = 0; i < spikeCount && i < 12; i++) {
+            for(let i=0; i<existingKnives; i++) {
                 let angle;
                 let attempts = 0;
                 do {
                     angle = Math.floor(Math.random() * 360);
                     attempts++;
-                    if (attempts > 100) break;
-                } while (isAngleTooClose(angle, usedAngles, MIN_ANGLE_DISTANCE * 1.5));
+                } while(isAngleTooClose(angle, usedAngles, 30) && attempts < 100);
                 
-                if (attempts <= 100) {
-                    addSpikeToWheel(angle);
+                if(attempts < 100) {
+                    createObject('knife', angle);
+                    usedAngles.push(angle);
+                }
+            }
+
+            // 生成尖刺
+            const spikeCount = isBoss ? 6 + Math.floor(lvl/5) : Math.min(2 + Math.floor(lvl/3), 8);
+            for(let i=0; i<spikeCount; i++) {
+                let angle;
+                let attempts = 0;
+                do {
+                    angle = Math.floor(Math.random() * 360);
+                    attempts++;
+                } while(isAngleTooClose(angle, usedAngles, 20) && attempts < 100);
+                
+                if(attempts < 100) {
+                    createObject('spike', angle);
+                    usedAngles.push(angle);
+                }
+            }
+
+            // 生成蘋果（+10金幣）和香蕉（+5金幣）
+            const appleChance = 0.3;
+            const bananaChance = 0.4;
+            
+            if(Math.random() < appleChance) {
+                let angle = Math.floor(Math.random() * 360);
+                if(!isAngleTooClose(angle, usedAngles, 20)) {
+                    createObject('apple', angle);
                     usedAngles.push(angle);
                 }
             }
             
-            // 隨機放置蘋果
-            if (!game.isBossLevel) {
-                const appleCount = Math.min(3, Math.floor(game.level / 2));
-                for (let i = 0; i < appleCount; i++) {
-                    let angle;
-                    let attempts = 0;
-                    do {
-                        angle = Math.floor(Math.random() * 360);
-                        attempts++;
-                        if (attempts > 100) break;
-                    } while (isAngleTooClose(angle, usedAngles, MIN_ANGLE_DISTANCE * 1.5));
-                    
-                    if (attempts <= 100) {
-                        addAppleToWheel(angle);
-                        usedAngles.push(angle);
-                    }
+            if(Math.random() < bananaChance) {
+                let angle = Math.floor(Math.random() * 360);
+                if(!isAngleTooClose(angle, usedAngles, 20)) {
+                    createObject('banana', angle);
+                    usedAngles.push(angle);
                 }
             }
+
+            // 生成特殊道具
+            if(lvl >= 3 && Math.random() < CONFIG.specialItemChance) {
+                createSpecialItem(usedAngles);
+            }
+
+            updateComboDisplay();
+            updateMultiplierDisplay();
             
-            // 更新顯示
-            updateDisplays();
-            updateKnifeCounter();
-            updateSpeedDisplay();
-            
-            console.log(`進入關卡 ${game.level}, 速度: ${game.rotationSpeed.toFixed(1)}x`);
+            showToast(`${getModeName(state.gameMode)} - Level ${lvl}`);
         }
-        
-        // 檢查角度是否太接近已使用的角度
-        function isAngleTooClose(angle, usedAngles, minDistance) {
-            for (const usedAngle of usedAngles) {
-                const angleDiff = Math.abs(angle - usedAngle);
-                const normalizedDiff = Math.min(angleDiff, 360 - angleDiff);
-                if (normalizedDiff < minDistance) {
-                    return true;
-                }
+
+        function getModeName(mode) {
+            const names = {
+                'classic': '經典模式',
+                'survival': '生存模式',
+                'challenge': '挑戰模式',
+                'boss_rush': 'Boss連戰'
+            };
+            return names[mode] || '經典模式';
+        }
+
+        function isAngleTooClose(angle, list, minDist) {
+            for(let a of list) {
+                let diff = Math.abs(angle - a);
+                if(diff > 180) diff = 360 - diff;
+                if(diff < minDist) return true;
             }
             return false;
         }
-        
-        // 將尖刺添加到輪盤
-        function addSpikeToWheel(angle) {
-            const spike = document.createElement('div');
-            spike.className = 'spike-on-wheel';
+
+        function createObject(type, angle) {
+            const el = document.createElement('div');
+            el.className = type;
+            el.style.left = '50%';
+            el.style.top = '50%';
             
-            const radian = (angle * Math.PI) / 180;
-            const x = Math.cos(radian) * WHEEL_RADIUS;
-            const y = Math.sin(radian) * WHEEL_RADIUS;
-            
-            const containerCenter = WHEEL_CONTAINER_SIZE / 2;
-            spike.style.left = `${containerCenter + x}px`;
-            spike.style.top = `${containerCenter + y}px`;
-            
-            wheelContainer.appendChild(spike);
-            game.spikesOnWheel.push({
-                element: spike, 
-                angle: angle,
-                x: x,
-                y: y
-            });
+            wheelContainer.appendChild(el);
+            state.objects.push({ type, el, angle });
         }
-        
-        // 將蘋果添加到輪盤
-        function addAppleToWheel(angle) {
-            const apple = document.createElement('div');
-            apple.className = 'apple-on-wheel';
+
+        function createSpecialItem(usedAngles = []) {
+            const types = [
+                { type: 'shield', color: '#00BFFF', effect: '保護一次碰撞' },
+                { type: 'timeSlow', color: '#9B30FF', effect: '減慢輪盤速度5秒' },
+                { type: 'extraLife', color: '#32CD32', effect: '額外生命' }
+            ];
             
-            const radian = (angle * Math.PI) / 180;
-            const x = Math.cos(radian) * (WHEEL_RADIUS - 20);
-            const y = Math.sin(radian) * (WHEEL_RADIUS - 20);
+            const item = types[Math.floor(Math.random() * types.length)];
+            let angle;
+            let attempts = 0;
             
-            const containerCenter = WHEEL_CONTAINER_SIZE / 2;
-            apple.style.left = `${containerCenter + x}px`;
-            apple.style.top = `${containerCenter + y}px`;
+            do {
+                angle = Math.floor(Math.random() * 360);
+                attempts++;
+            } while(isAngleTooClose(angle, usedAngles, 25) && attempts < 50);
             
-            wheelContainer.appendChild(apple);
-            game.applesOnWheel.push({
-                element: apple, 
-                angle: angle,
-                x: x,
-                y: y
-            });
-        }
-        
-        // 顯示消息
-        function showMessage(text) {
-            const message = document.createElement('div');
-            message.textContent = text;
-            message.style.cssText = `
-                position: fixed;
-                top: 30%;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0,0,0,0.8);
-                color: #FFD700;
-                padding: 15px 30px;
-                border-radius: 10px;
-                font-size: 20px;
-                z-index: 1000;
-                animation: fadeOut 2s forwards;
-            `;
+            if(attempts >= 50) return;
             
-            document.getElementById('gameContainer').appendChild(message);
+            const el = document.createElement('div');
+            el.className = 'special-item';
+            el.style.left = '50%';
+            el.style.top = '50%';
+            el.style.width = '24px';
+            el.style.height = '24px';
+            el.style.borderRadius = '50%';
+            el.style.background = `radial-gradient(circle, ${item.color}, #000)`;
+            el.style.boxShadow = `0 0 15px ${item.color}`;
+            el.style.border = `2px solid rgba(255,255,255,0.8)`;
+            el.dataset.type = item.type;
+            
+            wheelContainer.appendChild(el);
+            state.specialItems.push({ type: item.type, el, angle, effect: item.effect });
+            
+            let opacity = 1;
+            const blinkInterval = setInterval(() => {
+                opacity = opacity === 1 ? 0.6 : 1;
+                el.style.opacity = opacity;
+            }, 300);
             
             setTimeout(() => {
-                message.remove();
-            }, 2000);
+                clearInterval(blinkInterval);
+                if(el.parentNode) {
+                    el.remove();
+                    state.specialItems = state.specialItems.filter(item => item.el !== el);
+                }
+            }, 10000);
         }
-        
-        // 更新顯示
-        function updateDisplays() {
-            levelDisplay.textContent = game.level;
-            scoreDisplay.textContent = game.score;
-            coinDisplay.textContent = game.coins;
-            knivesDisplay.textContent = `${game.knives}/${game.maxKnives}`;
+
+        function resetPlayerKnife() {
+            state.isThrowing = false;
+            playerKnife.style.display = 'block';
+            playerKnife.style.bottom = '100px';
+            playerKnife.style.left = '50%';
+            playerKnife.style.transform = 'translateX(-50%) rotate(0deg)';
+            state.playerPos.bottom = 100;
         }
-        
-        // 更新飛刀計數器
-        function updateKnifeCounter() {
-            knifeCounter.textContent = `飛刀: ${game.knives}/${game.maxKnives}`;
-        }
-        
-        // 投擲飛刀 - 修正版本：直接向上，不會向右偏
+
         function throwKnife() {
-            if (!game.gameActive || game.knives <= 0) return;
+            if (!state.isPlaying || state.isThrowing) return;
+
+            state.isThrowing = true;
+            updateUI();
+
+            let currentBottom = 100;
             
-            game.knives--;
-            game.knivesThrown++;
-            updateKnifeCounter();
+            function animateFly() {
+                currentBottom += CONFIG.knifeSpeed;
+                playerKnife.style.bottom = currentBottom + 'px';
+
+                const targetBottom = (window.innerHeight * 0.4) + CONFIG.wheelRadius - 10;
+
+                if (currentBottom >= targetBottom) {
+                    checkCollision();
+                } else {
+                    requestAnimationFrame(animateFly);
+                }
+            }
+            requestAnimationFrame(animateFly);
             
-            // 飛刀向上飛行動畫 - 修正版本：保持X位置不變
-            playerKnife.style.animation = 'knifeThrow 0.3s forwards';
-            
-            // 計算飛刀擊中輪盤時的角度
-            const hitAngle = (360 - game.wheelRotation % 360) % 360;
-            
-            setTimeout(() => {
-                if (!game.gameActive) return;
-                
-                // 檢查是否擊中已存在的飛刀或尖刺
-                const hitResult = checkHit(hitAngle);
-                
-                if (hitResult.hit) {
-                    gameOver(hitResult.reason);
-                    playerKnife.style.animation = '';
-                    playerKnife.style.display = 'none';
+            playSound('throw');
+        }
+
+        function checkCollision() {
+            let hitAngle = (270 - state.wheelAngle) % 360;
+            if (hitAngle < 0) hitAngle += 360;
+
+            // 檢查尖刺
+            for (let obj of state.objects) {
+                if (obj.type === 'spike') {
+                    if (Math.abs(hitAngle - obj.angle) < CONFIG.collisionTolerance) {
+                        triggerGameOver("你撞到了尖刺！");
+                        return;
+                    }
+                }
+            }
+
+            // 檢查特殊道具
+            let hitSpecialItem = null;
+            for(let i = state.specialItems.length - 1; i >= 0; i--) {
+                const item = state.specialItems[i];
+                if(Math.abs(hitAngle - item.angle) < 15) {
+                    hitSpecialItem = item;
+                    break;
+                }
+            }
+
+            if (hitSpecialItem) {
+                activateSpecialItem(hitSpecialItem);
+                hitSpecialItem.el.remove();
+                state.specialItems = state.specialItems.filter(item => item !== hitSpecialItem);
+            }
+
+            // 檢查飛刀碰撞（只扣血）
+            let hitKnife = null;
+            for (let obj of state.objects) {
+                if (obj.type === 'knife') {
+                    if (Math.abs(hitAngle - obj.angle) < CONFIG.collisionTolerance) {
+                        hitKnife = obj;
+                        break;
+                    }
+                }
+            }
+
+            if (hitKnife) {
+                if (state.lives > 0) {
+                    loseLife();
+                    animateBounceBack();
+                    return;
+                } else {
+                    triggerGameOver("生命值耗盡！");
                     return;
                 }
-                
-                // 檢查是否擊中蘋果
-                const appleHit = checkAppleHit(hitAngle);
-                if (appleHit) {
-                    collectApple(appleHit);
+            }
+
+            // 檢查蘋果（+10金幣）
+            let hitApple = null;
+            for (let obj of state.objects) {
+                if (obj.type === 'apple') {
+                    if (Math.abs(hitAngle - obj.angle) < 10) {
+                        hitApple = obj;
+                        break;
+                    }
                 }
+            }
+
+            // 檢查香蕉（+5金幣）
+            let hitBanana = null;
+            for (let obj of state.objects) {
+                if (obj.type === 'banana') {
+                    if (Math.abs(hitAngle - obj.angle) < 12) {
+                        hitBanana = obj;
+                        break;
+                    }
+                }
+            }
+
+            // 檢查是否為完美命中
+            let isPerfectHit = false;
+            if(!hitKnife && !hitSpecialItem) {
+                const closestAngle = findClosestObjectAngle(hitAngle);
+                if(closestAngle === null || Math.abs(hitAngle - closestAngle) > 30) {
+                    isPerfectHit = true;
+                    state.perfectHitCount++;
+                    if(state.perfectHitCount >= 10 && !ACHIEVEMENTS.PERFECT_10.unlocked) {
+                        unlockAchievement('PERFECT_10');
+                    }
+                }
+            }
+
+            // *** 成功命中 ***
+            if (hitApple) {
+                hitApple.el.remove();
+                state.objects = state.objects.filter(o => o !== hitApple);
+                state.score += 50 * state.multiplier;
+                state.coins += 10; // 蘋果 +10金幣
+                showScorePopup(50);
+                showToast("命中蘋果！+10金幣");
+                updateCoinsDisplay();
+            } else if (hitBanana) {
+                hitBanana.el.remove();
+                state.objects = state.objects.filter(o => o !== hitBanana);
+                state.score += 30 * state.multiplier;
+                state.coins += 5; // 香蕉 +5金幣
+                showScorePopup(30);
+                showToast("命中香蕉！+5金幣");
+                updateCoinsDisplay();
+            } else {
+                // 成功插上飛刀！
+                state.knivesStuck++;
+                const scoreEarned = isPerfectHit ? 40 : 20;
+                state.score += scoreEarned * state.multiplier;
+                showScorePopup(scoreEarned);
                 
-                // 成功擊中輪盤
-                addKnifeToWheel(hitAngle);
-                playerKnife.style.animation = '';
-                playerKnife.style.bottom = '150px';
-                playerKnife.style.display = 'block';
-                
-                // 顯示擊中效果
-                showHitEffect();
-                
-                // 增加分數
-                game.score += game.isBossLevel ? 50 : 10 * game.level;
-                
-                // 重要：移除關卡內隨投擲次數增加速度的邏輯
-                // 現在只在進入新關卡時才增加速度
+                // 創建新的飛刀固定在輪盤上
+                createObject('knife', hitAngle);
                 
                 // 檢查是否完成關卡
-                if (game.knivesThrown === game.maxKnives) {
+                if(state.knivesStuck >= state.knivesRequired) {
                     setTimeout(() => {
                         levelComplete();
                     }, 500);
                 }
+            }
+
+            // 連擊系統
+            if(!hitKnife) {
+                state.combo++;
+                state.streak++;
                 
-                updateDisplays();
-            }, 300);
-        }
-        
-        // 檢查是否擊中已存在的飛刀或尖刺
-        function checkHit(hitAngle) {
-            // 檢查飛刀
-            for (const knife of game.knivesOnWheel) {
-                const angleDiff = Math.abs(knife.angle - hitAngle);
-                const normalizedDiff = Math.min(angleDiff, 360 - angleDiff);
-                
-                if (normalizedDiff < HIT_TOLERANCE) {
-                    return {hit: true, reason: "你碰到了輪盤上的飛刀！"};
+                if(isPerfectHit) {
+                    showPerfectEffect();
+                    playSound('perfect');
                 }
-            }
-            
-            // 檢查尖刺
-            for (const spike of game.spikesOnWheel) {
-                const angleDiff = Math.abs(spike.angle - hitAngle);
-                const normalizedDiff = Math.min(angleDiff, 360 - angleDiff);
                 
-                if (normalizedDiff < HIT_TOLERANCE) {
-                    return {hit: true, reason: "你碰到了尖刺！"};
+                if(state.combo >= CONFIG.comboThreshold) {
+                    state.multiplier = Math.min(5, Math.floor(state.combo / CONFIG.comboThreshold) + 1);
+                    showToast(`連擊 x${state.multiplier}!`);
+                    updateMultiplierDisplay();
                 }
-            }
-            
-            return {hit: false, reason: ""};
-        }
-        
-        // 檢查是否擊中蘋果
-        function checkAppleHit(hitAngle) {
-            for (let i = 0; i < game.applesOnWheel.length; i++) {
-                const apple = game.applesOnWheel[i];
-                const angleDiff = Math.abs(apple.angle - hitAngle);
-                const normalizedDiff = Math.min(angleDiff, 360 - angleDiff);
                 
-                if (normalizedDiff < HIT_TOLERANCE + 5) {
-                    return {index: i, apple: apple};
-                }
-            }
-            return null;
-        }
-        
-        // 收集蘋果
-        function collectApple(appleHit) {
-            const apple = appleHit.apple;
-            const index = appleHit.index;
-            
-            apple.element.remove();
-            game.applesOnWheel.splice(index, 1);
-            
-            const coinsEarned = game.isBossLevel ? 20 : 10;
-            game.coins += coinsEarned;
-            saveCoins(); // 獲得金幣後立即保存
-            
-            showCoinEffect(apple, coinsEarned);
-            updateDisplays();
-        }
-        
-        // 顯示金幣效果
-        function showCoinEffect(apple, amount) {
-            const coin = document.createElement('div');
-            coin.className = 'coin';
-            coin.style.left = apple.element.style.left;
-            coin.style.top = apple.element.style.top;
-            coin.style.display = 'block';
-            
-            wheelContainer.appendChild(coin);
-            
-            const coinText = document.createElement('div');
-            coinText.className = 'coin-indicator';
-            coinText.textContent = `+${amount}💰`;
-            coinText.style.left = apple.element.style.left;
-            coinText.style.top = apple.element.style.top;
-            
-            wheelContainer.appendChild(coinText);
-            
-            coinText.style.animation = 'coinCollect 1s forwards';
-            
-            setTimeout(() => {
-                coin.remove();
-                coinText.remove();
-            }, 1000);
-        }
-        
-        // 顯示擊中效果
-        function showHitEffect() {
-            hitIndicator.style.animation = 'hitEffect 0.5s';
-            setTimeout(() => {
-                hitIndicator.style.animation = '';
-            }, 500);
-        }
-        
-        // 將飛刀添加到輪盤
-        function addKnifeToWheel(angle) {
-            const knife = document.createElement('div');
-            knife.className = 'knife-on-wheel';
-            
-            const knifeType = knifeTypes[game.currentKnife];
-            knife.style.background = knifeType.color;
-            
-            if (knifeType.special) {
-                knife.classList.add('special-knife');
-            }
-            
-            const radian = (angle * Math.PI) / 180;
-            const x = Math.cos(radian) * WHEEL_RADIUS;
-            const y = Math.sin(radian) * WHEEL_RADIUS;
-            
-            const containerCenter = WHEEL_CONTAINER_SIZE / 2;
-            knife.style.left = `${containerCenter + x}px`;
-            knife.style.top = `${containerCenter + y}px`;
-            
-            knife.style.animation = 'knifeAppear 0.3s';
-            
-            wheelContainer.appendChild(knife);
-            game.knivesOnWheel.push({
-                element: knife, 
-                angle: angle,
-                x: x,
-                y: y
-            });
-        }
-        
-        // 關卡完成
-        function levelComplete() {
-            game.gameActive = false;
-            
-            const baseCoins = game.isBossLevel ? 50 : 10;
-            const earnedCoins = baseCoins * game.level;
-            const earnedScore = game.isBossLevel ? 500 : 100 * game.level;
-            
-            game.coins += earnedCoins;
-            game.score += earnedScore;
-            saveCoins(); // 完成關卡後保存金幣
-            
-            // 如果是Boss關卡，解鎖特殊飛刀
-            if (game.isBossLevel) {
-                const bossLevelNumber = Math.floor(game.level / 5);
-                const specialKnives = ['dragon', 'ice', 'shadow'];
-                
-                if (bossLevelNumber <= specialKnives.length) {
-                    const knifeId = specialKnives[bossLevelNumber - 1];
-                    if (!knifeTypes[knifeId].owned) {
-                        knifeTypes[knifeId].owned = true;
-                        game.ownedKnives.push(knifeId);
-                        showMessage(`解鎖特殊飛刀：${knifeTypes[knifeId].name}！`);
-                        initShop();
+                if(state.combo > state.maxCombo) {
+                    state.maxCombo = state.combo;
+                    if(state.combo >= 20 && !ACHIEVEMENTS.COMBO_KING.unlocked) {
+                        unlockAchievement('COMBO_KING');
                     }
                 }
-            }
-            
-            document.getElementById('levelCoins').textContent = earnedCoins;
-            document.getElementById('levelScore').textContent = earnedScore;
-            levelCompleteScreen.style.display = 'block';
-            
-            updateDisplays();
-        }
-        
-        // 下一關 - 只在這裡增加速度
-        function nextLevel() {
-            game.level++;
-            game.gameActive = true;
-            levelCompleteScreen.style.display = 'none';
-            setupLevel(); // 這裡會根據關卡數計算新的速度
-            
-            updateDisplays();
-            console.log(`進入下一關: ${game.level}, 速度: ${game.rotationSpeed.toFixed(1)}x`);
-        }
-        
-        // 遊戲結束 - 金幣不會消失
-        function gameOver(reason) {
-            game.gameActive = false;
-            
-            // 計算獲得金幣（基於分數）
-            const earnedCoins = Math.floor(game.score / 20);
-            game.coins += earnedCoins;
-            saveCoins(); // 遊戲結束時也保存金幣
-            
-            // 顯示遊戲結束畫面
-            document.getElementById('gameOverReason').textContent = reason;
-            document.getElementById('finalScore').textContent = game.score;
-            document.getElementById('finalCoins').textContent = earnedCoins;
-            gameOverScreen.style.display = 'block';
-            
-            updateDisplays();
-            console.log(`遊戲結束，金幣已保存: ${game.coins}`);
-        }
-        
-        // 遊戲主循環
-        function gameLoop() {
-            if (game.gameActive) {
-                // 更新輪盤旋轉角度
-                game.wheelRotation += game.rotationSpeed;
-                if (game.wheelRotation >= 360) {
-                    game.wheelRotation -= 360;
+                
+                updateComboDisplay();
+            } else {
+                if(state.combo > 0) {
+                    showToast(`連擊中斷！最大連擊: ${state.maxCombo}`);
                 }
-                
-                // 應用旋轉到輪盤
-                wheel.style.transform = `translate(-50%, -50%) rotate(${game.wheelRotation}deg)`;
-                
-                // 更新輪盤上所有飛刀的位置和角度
-                game.knivesOnWheel.forEach(knife => {
-                    const currentAngle = (knife.angle + game.wheelRotation) % 360;
-                    const radian = (currentAngle * Math.PI) / 180;
-                    const x = Math.cos(radian) * WHEEL_RADIUS;
-                    const y = Math.sin(radian) * WHEEL_RADIUS;
-                    
-                    const containerCenter = WHEEL_CONTAINER_SIZE / 2;
-                    knife.element.style.left = `${containerCenter + x}px`;
-                    knife.element.style.top = `${containerCenter + y}px`;
-                    knife.element.style.transform = `rotate(${currentAngle}deg)`;
-                    
-                    knife.x = x;
-                    knife.y = y;
-                });
-                
-                // 更新輪盤上所有尖刺的位置和角度
-                game.spikesOnWheel.forEach(spike => {
-                    const currentAngle = (spike.angle + game.wheelRotation) % 360;
-                    const radian = (currentAngle * Math.PI) / 180;
-                    const x = Math.cos(radian) * WHEEL_RADIUS;
-                    const y = Math.sin(radian) * WHEEL_RADIUS;
-                    
-                    const containerCenter = WHEEL_CONTAINER_SIZE / 2;
-                    spike.element.style.left = `${containerCenter + x}px`;
-                    spike.element.style.top = `${containerCenter + y}px`;
-                    spike.element.style.transform = `rotate(${currentAngle}deg)`;
-                    
-                    spike.x = x;
-                    spike.y = y;
-                });
-                
-                // 更新輪盤上所有蘋果的位置
-                game.applesOnWheel.forEach(apple => {
-                    const currentAngle = (apple.angle + game.wheelRotation) % 360;
-                    const radian = (currentAngle * Math.PI) / 180;
-                    const x = Math.cos(radian) * (WHEEL_RADIUS - 20);
-                    const y = Math.sin(radian) * (WHEEL_RADIUS - 20);
-                    
-                    const containerCenter = WHEEL_CONTAINER_SIZE / 2;
-                    apple.element.style.left = `${containerCenter + x}px`;
-                    apple.element.style.top = `${containerCenter + y}px`;
-                    
-                    apple.x = x;
-                    apple.y = y;
-                });
+                state.combo = 0;
+                state.multiplier = 1;
+                state.streak = 0;
+                updateComboDisplay();
+                updateMultiplierDisplay();
+            }
+
+            // 將玩家飛刀消失，等待下一次投擲
+            playerKnife.style.display = 'none';
+            state.isThrowing = false;
+            
+            // 等待一小段時間後重置玩家飛刀（可以繼續投擲）
+            setTimeout(() => {
+                resetPlayerKnife();
+            }, 200);
+
+            updateUI();
+            
+            // 生存模式檢查成就
+            if(state.gameMode === GAME_MODES.SURVIVAL && state.score >= 500 && !ACHIEVEMENTS.SURVIVAL_MASTER.unlocked) {
+                unlockAchievement('SURVIVAL_MASTER');
+            }
+        }
+
+        function findClosestObjectAngle(hitAngle) {
+            let closest = null;
+            let minDiff = 360;
+            
+            for(let obj of state.objects) {
+                let diff = Math.abs(hitAngle - obj.angle);
+                if(diff > 180) diff = 360 - diff;
+                if(diff < minDiff) {
+                    minDiff = diff;
+                    closest = obj.angle;
+                }
             }
             
+            return closest;
+        }
+
+        function activateSpecialItem(item) {
+            showToast(`獲得: ${item.effect}`);
+            playSound('special');
+            
+            switch(item.type) {
+                case 'shield':
+                    const shield = document.createElement('div');
+                    shield.className = 'hit-effect';
+                    shield.style.background = 'radial-gradient(circle, rgba(0,191,255,0.8), transparent)';
+                    shield.style.width = '80px';
+                    shield.style.height = '80px';
+                    shield.style.left = '50%';
+                    shield.style.top = '50%';
+                    shield.style.transform = 'translate(-50%, -50%)';
+                    document.body.appendChild(shield);
+                    setTimeout(() => shield.remove(), 1000);
+                    
+                    state.lives = Math.min(state.lives + 1, 3);
+                    const hearts = document.querySelectorAll('.heart');
+                    for(let heart of hearts) {
+                        if(heart.classList.contains('lost')) {
+                            heart.classList.remove('lost');
+                            heart.style.opacity = '1';
+                            break;
+                        }
+                    }
+                    break;
+                    
+                case 'timeSlow':
+                    const originalSpeed = state.wheelSpeed;
+                    state.wheelSpeed *= 0.4;
+                    showToast("時間減慢！");
+                    
+                    wheel.style.filter = 'hue-rotate(180deg)';
+                    
+                    setTimeout(() => {
+                        state.wheelSpeed = originalSpeed;
+                        wheel.style.filter = 'none';
+                        showToast("時間恢復正常");
+                    }, 5000);
+                    break;
+                    
+                case 'extraLife':
+                    state.lives = Math.min(state.lives + 1, 5);
+                    for(let i = 0; i < state.lives; i++) {
+                        if(i >= 3) {
+                            const heartsContainer = document.getElementById('livesDisplay');
+                            if(heartsContainer.children.length < state.lives) {
+                                const extraHeart = document.createElement('div');
+                                extraHeart.className = 'heart';
+                                extraHeart.style.background = '#32CD32';
+                                heartsContainer.appendChild(extraHeart);
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+
+        function loseLife() {
+            state.lives--;
+            const hearts = document.querySelectorAll('.heart');
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                if (!hearts[i].classList.contains('lost')) {
+                    hearts[i].classList.add('lost');
+                    break;
+                }
+            }
+            
+            if(state.combo > 0) {
+                showToast(`連擊中斷！最大連擊: ${state.maxCombo}`);
+            }
+            state.combo = 0;
+            state.multiplier = 1;
+            state.streak = 0;
+            updateComboDisplay();
+            updateMultiplierDisplay();
+            
+            showToast("小心！生命值減少");
+            playSound('hit');
+        }
+
+        function animateBounceBack() {
+            let currentBottom = parseFloat(playerKnife.style.bottom);
+            function bounce() {
+                currentBottom -= 15;
+                playerKnife.style.bottom = currentBottom + 'px';
+                if (currentBottom > 100) {
+                    requestAnimationFrame(bounce);
+                } else {
+                    resetPlayerKnife();
+                }
+            }
+            requestAnimationFrame(bounce);
+        }
+
+        function showPerfectEffect() {
+            const effect = document.createElement('div');
+            effect.className = 'hit-effect';
+            effect.style.left = '50%';
+            effect.style.top = '50%';
+            effect.style.transform = 'translate(-50%, -50%)';
+            effect.style.background = 'radial-gradient(circle, rgba(255,215,0,0.9), rgba(255,69,0,0.7))';
+            document.body.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        function showScorePopup(points) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = `+${points}`;
+            popup.style.left = '50%';
+            popup.style.bottom = '200px';
+            popup.style.transform = 'translateX(-50%)';
+            
+            if(points >= 20) {
+                popup.style.color = '#FF4500';
+                popup.style.fontSize = '28px';
+            }
+            
+            document.getElementById('gameContainer').appendChild(popup);
+            
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        function updateComboDisplay() {
+            if(state.combo > 1) {
+                comboDisplay.textContent = `連擊: ${state.combo} 次`;
+                comboDisplay.style.opacity = '1';
+            } else {
+                comboDisplay.style.opacity = '0';
+            }
+        }
+
+        function updateMultiplierDisplay() {
+            if(state.multiplier > 1) {
+                multiplierDisplay.textContent = `x${state.multiplier}`;
+                multiplierDisplay.style.opacity = '1';
+            } else {
+                multiplierDisplay.style.opacity = '0';
+            }
+        }
+
+        function updateCoinsDisplay() {
+            coinsDisplay.textContent = state.coins;
+        }
+
+        // 遊戲主循環
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const delta = timestamp - lastTime;
+
+            if (state.isPlaying) {
+                state.wheelAngle += state.wheelSpeed * state.wheelDirection;
+                
+                if (timestamp - state.lastSwitchTime > state.switchInterval) {
+                    if (Math.random() > 0.6) {
+                        state.wheelDirection *= -1;
+                        showToast("旋轉方向改變！");
+                    }
+                    state.lastSwitchTime = timestamp;
+                }
+
+                wheel.style.transform = `rotate(${state.wheelAngle}deg)`;
+                
+                state.objects.forEach(obj => {
+                    const rotation = obj.angle + state.wheelAngle;
+                    const visualRotation = rotation + 90;
+                    
+                    if (obj.type === 'knife' || obj.type === 'spike') {
+                         const rad = rotation * Math.PI / 180;
+                         const x = Math.cos(rad) * CONFIG.wheelRadius;
+                         const y = Math.sin(rad) * CONFIG.wheelRadius;
+                         
+                         obj.el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${visualRotation}deg)`;
+                    } else if (obj.type === 'apple' || obj.type === 'banana') {
+                        const rad = rotation * Math.PI / 180;
+                        const x = Math.cos(rad) * (CONFIG.wheelRadius - 10);
+                        const y = Math.sin(rad) * (CONFIG.wheelRadius - 10);
+                        obj.el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+                    }
+                });
+                
+                state.specialItems.forEach(item => {
+                    const rotation = item.angle + state.wheelAngle;
+                    const rad = rotation * Math.PI / 180;
+                    const x = Math.cos(rad) * (CONFIG.wheelRadius + 20);
+                    const y = Math.sin(rad) * (CONFIG.wheelRadius + 20);
+                    item.el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+                });
+            }
+
+            lastTime = timestamp;
             requestAnimationFrame(gameLoop);
         }
-        
-        // 事件監聽器
-        throwButton.addEventListener('click', throwKnife);
-        nextLevelButton.addEventListener('click', nextLevel);
-        restartButton.addEventListener('click', initGame);
-        
-        // 商店相關事件
-        shopButton.addEventListener('click', () => {
-            shopPanel.style.display = 'block';
-            initShop();
-        });
-        
-        closeShop.addEventListener('click', () => {
-            shopPanel.style.display = 'none';
-        });
-        
-        // 鍵盤控制
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && game.gameActive) {
-                e.preventDefault();
-                throwKnife();
-                
-                throwButton.style.animation = 'pulse 0.2s';
+
+        function levelComplete() {
+            state.isPlaying = false;
+            
+            // 每過一關 +50金幣
+            state.coins += 50;
+            
+            // Boss戰特殊處理
+            const isBoss = state.level % 5 === 0;
+            if(isBoss) {
+                state.bossDefeated++;
+                if(state.bossDefeated >= 10 && !ACHIEVEMENTS.BOSS_SLAYER.unlocked) {
+                    unlockAchievement('BOSS_SLAYER');
+                }
+            }
+            
+            // 完美通關檢查（無傷）
+            if(state.lives === 3) {
+                state.perfectLevels++;
+                if(state.perfectLevels >= 5 && !ACHIEVEMENTS.PERFECT_GAME.unlocked) {
+                    unlockAchievement('PERFECT_GAME');
+                }
+            } else {
+                state.perfectLevels = 0;
+            }
+            
+            document.getElementById('lcKnives').innerText = state.knivesStuck;
+            document.getElementById('lcScore').innerText = state.score;
+            document.getElementById('lcCoins').innerText = 50;
+            
+            // 生存模式不顯示關卡完成
+            if(state.gameMode === GAME_MODES.SURVIVAL) {
                 setTimeout(() => {
-                    throwButton.style.animation = '';
-                }, 200);
+                    setupLevel(state.level + 1);
+                }, 1000);
+            } else {
+                document.getElementById('levelCompleteModal').style.display = 'block';
             }
-        });
-        
-        // 清除保存的金幣（調試用）
-        function clearSavedCoins() {
-            if (confirm('確定要清除所有保存的金幣嗎？')) {
-                localStorage.removeItem('ninjaKnifeCoins');
-                alert('金幣已清除！');
-                initGame();
-            }
+            
+            updateCoinsDisplay();
+            saveGameData();
         }
-        
-        // 初始化遊戲
-        initGame();
+
+        window.nextLevelWithAnim = function() {
+            document.getElementById('levelCompleteModal').style.display = 'none';
+            
+            document.getElementById('transitionLevelText').innerText = `Level ${state.level + 1}`;
+            levelTransition.classList.add('slide-in');
+            
+            setTimeout(() => {
+                levelTransition.classList.remove('slide-in');
+                setupLevel(state.level + 1);
+            }, 1800);
+        }
+
+        window.initGame = function() {
+            document.getElementById('gameOverModal').style.display = 'none';
+            resetGameData();
+            setupLevel(1);
+        }
+
+        function returnToMenu() {
+            document.getElementById('gameOverModal').style.display = 'none';
+            document.getElementById('levelCompleteModal').style.display = 'none';
+            startScreen.style.display = 'flex';
+            state.isPlaying = false;
+            updateCoinsDisplay();
+        }
+
+        function triggerGameOver(reason) {
+            state.isPlaying = false;
+            document.getElementById('goReason').innerText = reason;
+            document.getElementById('goScore').innerText = state.score;
+            document.getElementById('goCombo').innerText = state.maxCombo;
+            document.getElementById('goCoins').innerText = state.coins;
+            document.getElementById('gameOverModal').style.display = 'block';
+            
+            saveGameData();
+        }
+
+        function updateUI() {
+            document.getElementById('levelDisplay').innerText = state.level;
+            document.getElementById('scoreDisplay').innerText = state.score;
+            document.getElementById('knifeCounter').innerText = `已插: ${state.knivesStuck}/${state.knivesRequired}`;
+            updateCoinsDisplay();
+        }
+
+        function showToast(msg) {
+            toastEl.innerText = msg;
+            toastEl.style.opacity = '1';
+            setTimeout(() => {
+                toastEl.style.opacity = '0';
+            }, 1500);
+        }
+
+        function unlockAchievement(achievementKey) {
+            ACHIEVEMENTS[achievementKey].unlocked = true;
+            state.achievements[achievementKey] = true;
+            
+            localStorage.setItem('ninja_achievements', JSON.stringify(state.achievements));
+            
+            const achievement = ACHIEVEMENTS[achievementKey];
+            const notification = document.createElement('div');
+            notification.className = 'achievement-notification';
+            notification.innerHTML = `
+                <h3 style="color:#FFD700;">成就解鎖！</h3>
+                <h4 style="color:#FFF;">${achievement.name}</h4>
+                <p style="color:#CCC;">${achievement.desc}</p>
+                <p style="color:#FFD700;">+${achievement.reward} 金幣</p>
+            `;
+            
+            document.body.appendChild(notification);
+            state.coins += achievement.reward;
+            updateCoinsDisplay();
+            saveGameData();
+            
+            setTimeout(() => {
+                if(notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // 簡易音效系統
+        function playSound(type) {
+            console.log(`播放音效: ${type}`);
+        }
+
     </script>
 </body>
 </html>
