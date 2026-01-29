@@ -67,7 +67,7 @@
             display: flex;
             justify-content: space-between;
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             margin-bottom: 35px;
             background: rgba(25, 25, 45, 0.9);
             padding: 25px 35px;
@@ -111,6 +111,14 @@
         
         .time-value {
             color: #ff6b6b;
+        }
+        
+        .chain-value {
+            color: #a29bfe;
+        }
+        
+        .score-value {
+            color: #96ceb4;
         }
         
         .stat-label {
@@ -536,6 +544,107 @@
             border: 2px solid white;
         }
         
+        /* 新增：液體飛行動畫 */
+        .flying-liquid {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            z-index: 1000;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 0 20px currentColor;
+            pointer-events: none;
+        }
+        
+        /* 新增：粒子特效 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.8;
+        }
+        
+        /* 新增：連鎖數字顯示 */
+        .chain-counter {
+            position: fixed;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #feca57;
+            text-shadow: 0 0 20px rgba(254, 202, 87, 0.8);
+            z-index: 1001;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+        
+        /* 新增：成就徽章 */
+        .achievement-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #8a6d00;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin: 2px;
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+            animation: badgeGlow 2s infinite;
+        }
+        
+        @keyframes badgeGlow {
+            0%, 100% { box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.6); }
+        }
+        
+        /* 新增：排行榜 */
+        .leaderboard {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(25, 25, 45, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 300px;
+            display: none;
+            z-index: 999;
+            border: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        .leaderboard.show {
+            display: block;
+        }
+        
+        .leaderboard h3 {
+            color: #feca57;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        .leaderboard-item:nth-child(1) .rank { color: #ffd700; font-weight: bold; }
+        .leaderboard-item:nth-child(2) .rank { color: #c0c0c0; font-weight: bold; }
+        .leaderboard-item:nth-child(3) .rank { color: #cd7f32; font-weight: bold; }
+        
+        .combo-effect {
+            animation: comboPulse 0.3s;
+        }
+        
+        @keyframes comboPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
         footer {
             margin-top: 40px;
             color: #666;
@@ -602,6 +711,12 @@
             .message-title {
                 font-size: 2.5rem;
             }
+            
+            .leaderboard {
+                position: static;
+                max-width: 100%;
+                margin-top: 20px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -629,6 +744,17 @@
             <p class="subtitle">將所有試管裡的液體按照顏色分開，每個試管裡只留同一種顏色的水。可以將液體倒入任何試管，只要不超過容量限制。</p>
         </header>
         
+        <!-- 新增：排行榜按鈕 -->
+        <button class="game-btn" id="leaderboard-btn" style="background: linear-gradient(135deg, #a29bfe, #6c5ce7); margin-bottom: 20px;">
+            <span>🏆</span> 排行榜
+        </button>
+        
+        <!-- 新增：排行榜 -->
+        <div class="leaderboard" id="leaderboard">
+            <h3>🏆 排行榜</h3>
+            <div id="leaderboard-list"></div>
+        </div>
+        
         <div class="game-stats">
             <div class="stat-item">
                 <div class="stat-value moves-value" id="moves">0</div>
@@ -641,6 +767,14 @@
             <div class="stat-item">
                 <div class="stat-value time-value" id="time">0</div>
                 <div class="stat-label">時間 (秒)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value chain-value" id="chain">0</div>
+                <div class="stat-label">連鎖</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value score-value" id="score">0</div>
+                <div class="stat-label">分數</div>
             </div>
         </div>
         
@@ -668,6 +802,12 @@
             </button>
         </div>
         
+        <!-- 新增：成就顯示區域 -->
+        <div style="width: 100%; max-width: 900px; margin-bottom: 30px;">
+            <h3 style="color: #feca57; text-align: center; margin-bottom: 15px;">🎯 成就系統</h3>
+            <div id="achievements-container" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;"></div>
+        </div>
+        
         <div class="game-info">
             <div class="instructions">
                 <h2>遊戲規則（自由版）</h2>
@@ -676,8 +816,8 @@
                     <li><span class="color-indicator" style="background-color: #4ecdc4;"></span>操作：點擊一個裝有液體的試管，再點擊另一個目標試管，即可將最上方的液體倒入目標試管</li>
                     <li><span class="color-indicator" style="background-color: #45b7d1;"></span>重要：可以將液體倒入任何試管，不限制顏色！可以倒入不同顏色上方</li>
                     <li><span class="color-indicator" style="background-color: #96ceb4;"></span>容量：每支試管最多容納4個單位的液體，超過無法倒入</li>
-                    <li><span class="color-indicator" style="background-color: #feca57;"></span>起始：遊戲開始時有5支試管，其中1支為空管，方便過渡</li>
-                    <li><span class="color-indicator" style="background-color: #a29bfe;"></span>勝利：當所有試管都只包含一種顏色或為空時，遊戲勝利</li>
+                    <li><span class="color-indicator" style="background-color: #feca57;"></span>連鎖：完成一個滿管的同色液體會觸發連鎖反應，獲得額外分數！</li>
+                    <li><span class="color-indicator" style="background-color: #a29bfe;"></span>成就：完成特定目標解鎖成就徽章，挑戰你的最高分！</li>
                 </ul>
             </div>
             
@@ -690,7 +830,7 @@
         </div>
         
         <footer>
-            <p>試管液體自由分類遊戲 | HTML5 + JavaScript 實現 | 可以自由倒入任何試管！</p>
+            <p>試管液體自由分類遊戲 | HTML5 + JavaScript 實現 | 酷炫特效 + 成就系統！</p>
         </footer>
         
         <div class="message-overlay" id="message-overlay">
@@ -713,6 +853,9 @@
                     </div>
                 </div>
                 
+                <!-- 新增：成就解鎖顯示 -->
+                <div id="achievements-unlocked" style="margin-bottom: 30px;"></div>
+                
                 <button class="close-btn" id="close-btn">繼續下一關</button>
             </div>
         </div>
@@ -733,6 +876,61 @@
             ]
         };
         
+        // 成就系統定義
+        const ACHIEVEMENTS = {
+            speedRunner: {
+                id: "speedRunner",
+                name: "閃電快手",
+                description: "30秒內完成一關",
+                icon: "⚡",
+                unlocked: false,
+                check: function() { return gameState.time <= 30 && gameState.isPlaying === false; }
+            },
+            perfectionist: {
+                id: "perfectionist",
+                name: "完美主義者",
+                description: "以最少步數完成",
+                icon: "🎯",
+                unlocked: false,
+                check: function() { 
+                    const minMoves = gameState.colorsPerLevel * 3;
+                    return gameState.moves <= minMoves && gameState.isPlaying === false;
+                }
+            },
+            chainMaster: {
+                id: "chainMaster",
+                name: "連鎖大師",
+                description: "達成5次連鎖",
+                icon: "🔗",
+                unlocked: false,
+                check: function() { return gameState.maxChain >= 5; }
+            },
+            highScore: {
+                id: "highScore",
+                name: "高分玩家",
+                description: "單局得分超過5000",
+                icon: "🏆",
+                unlocked: false,
+                check: function() { return calculateScore() >= 5000; }
+            },
+            levelExpert: {
+                id: "levelExpert",
+                name: "關卡專家",
+                description: "完成第5關",
+                icon: "⭐",
+                unlocked: false,
+                check: function() { return gameState.level >= 5; }
+            },
+            fastLearner: {
+                id: "fastLearner",
+                name: "快速學習者",
+                description: "首次遊戲就通關",
+                icon: "🚀",
+                unlocked: false,
+                check: function() { return gameState.gamesPlayed === 1 && gameState.isPlaying === false; }
+            }
+        };
+        
         // 遊戲狀態
         const gameState = {
             level: 1,
@@ -744,7 +942,13 @@
             tubes: [],
             history: [],
             colorsPerLevel: 4,  // 第一關使用4種顏色
-            maxLevel: 10
+            maxLevel: 10,
+            chainCount: 0,
+            maxChain: 0,
+            score: 0,
+            gamesPlayed: 0,
+            achievements: JSON.parse(localStorage.getItem('tubeAchievements') || '{}'),
+            leaderboard: JSON.parse(localStorage.getItem('tubeLeaderboard') || '[]')
         };
         
         // DOM 元素
@@ -752,6 +956,8 @@
             moves: document.getElementById('moves'),
             level: document.getElementById('level'),
             time: document.getElementById('time'),
+            chain: document.getElementById('chain'),
+            score: document.getElementById('score'),
             startBtn: document.getElementById('start-btn'),
             hintBtn: document.getElementById('hint-btn'),
             undoBtn: document.getElementById('undo-btn'),
@@ -766,7 +972,12 @@
             messageMoves: document.getElementById('message-moves'),
             messageTime: document.getElementById('message-time'),
             messageScore: document.getElementById('message-score'),
-            closeBtn: document.getElementById('close-btn')
+            closeBtn: document.getElementById('close-btn'),
+            leaderboardBtn: document.getElementById('leaderboard-btn'),
+            leaderboard: document.getElementById('leaderboard'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            achievementsContainer: document.getElementById('achievements-container'),
+            achievementsUnlocked: document.getElementById('achievements-unlocked')
         };
         
         // 初始化遊戲
@@ -776,15 +987,21 @@
             gameState.isPlaying = false;
             gameState.selectedTube = null;
             gameState.history = [];
+            gameState.chainCount = 0;
+            gameState.score = 0;
             
             clearInterval(gameState.timer);
             
             updateDisplay();
             createTubes();
+            loadAchievements();
+            renderAchievements();
+            updateLeaderboard();
             
             elements.startBtn.innerHTML = '<span>▶</span> 開始遊戲';
             elements.undoBtn.disabled = true;
             elements.hintBox.classList.remove('active');
+            elements.leaderboard.classList.remove('show');
             
             // 重置選中狀態
             document.querySelectorAll('.tube-container').forEach(tube => {
@@ -975,7 +1192,7 @@
             }
         }
         
-        // 移動液體
+        // 移動液體 - 新增特效版本
         function moveLiquid(fromIndex, toIndex) {
             const fromTube = gameState.tubes[fromIndex];
             const toTube = gameState.tubes[toIndex];
@@ -998,10 +1215,12 @@
             const liquidToMove = fromTube.liquids[fromTube.liquids.length - 1];
             
             // 自由版：可以倒入任何試管，只要不超過容量！
-            // 不再檢查顏色是否相同
             
             // 保存歷史狀態
             saveHistory();
+            
+            // 顯示酷炫的飛行動畫
+            pourLiquidAnimation(fromIndex, toIndex, liquidToMove.value);
             
             // 執行移動
             fromTube.liquids.pop();
@@ -1014,8 +1233,8 @@
             renderTube(fromIndex);
             renderTube(toIndex);
             
-            // 添加動畫效果
-            animateLiquidMove(fromIndex, toIndex);
+            // 檢查連鎖反應
+            checkChainReaction(toIndex);
             
             // 更新顯示
             updateDisplay();
@@ -1031,18 +1250,195 @@
             return true;
         }
         
-        // 動畫效果：液體移動
-        function animateLiquidMove(fromIndex, toIndex) {
-            const fromTube = gameState.tubes[fromIndex].container;
-            const toTube = gameState.tubes[toIndex].container;
+        // 酷炫的液體飛行動畫
+        function pourLiquidAnimation(fromIndex, toIndex, color) {
+            const fromTube = gameState.tubes[fromIndex].element;
+            const toTube = gameState.tubes[toIndex].element;
             
-            fromTube.classList.add('liquid-animation');
-            toTube.classList.add('liquid-animation');
+            const fromRect = fromTube.getBoundingClientRect();
+            const toRect = toTube.getBoundingClientRect();
             
+            // 創建飛行的液體球
+            const flyingLiquid = document.createElement('div');
+            flyingLiquid.className = 'flying-liquid';
+            flyingLiquid.style.background = color;
+            flyingLiquid.style.left = `${fromRect.left + fromRect.width/2}px`;
+            flyingLiquid.style.top = `${fromRect.top + 30}px`;
+            flyingLiquid.style.transform = 'scale(0)';
+            flyingLiquid.style.boxShadow = `0 0 30px ${color}`;
+            
+            document.body.appendChild(flyingLiquid);
+            
+            // 動畫效果
             setTimeout(() => {
-                fromTube.classList.remove('liquid-animation');
-                toTube.classList.remove('liquid-animation');
-            }, 1500);
+                flyingLiquid.style.transform = 'scale(1)';
+                
+                setTimeout(() => {
+                    flyingLiquid.style.left = `${toRect.left + toRect.width/2}px`;
+                    flyingLiquid.style.top = `${toRect.top + 30}px`;
+                    flyingLiquid.style.transform = 'scale(0.5)';
+                    
+                    // 到達目標時的粒子效果
+                    createSplashEffect(toRect.left + toRect.width/2, toRect.top + 30, color);
+                    
+                    setTimeout(() => {
+                        flyingLiquid.remove();
+                    }, 500);
+                }, 100);
+            }, 10);
+        }
+        
+        // 創建濺射粒子效果
+        function createSplashEffect(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.background = color;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.width = '8px';
+                particle.style.height = '8px';
+                
+                document.body.appendChild(particle);
+                
+                // 隨機方向飛出
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 20 + Math.random() * 40;
+                const duration = 400 + Math.random() * 400;
+                
+                const startX = x;
+                const startY = y;
+                
+                let progress = 0;
+                const animate = () => {
+                    progress += 16 / duration;
+                    
+                    if (progress < 1) {
+                        const currentX = startX + Math.cos(angle) * distance * progress;
+                        const currentY = startY + Math.sin(angle) * distance * progress;
+                        
+                        particle.style.left = `${currentX}px`;
+                        particle.style.top = `${currentY}px`;
+                        particle.style.opacity = 1 - progress;
+                        
+                        requestAnimationFrame(animate);
+                    } else {
+                        particle.remove();
+                    }
+                };
+                animate();
+            }
+        }
+        
+        // 檢查連鎖反應
+        function checkChainReaction(tubeIndex) {
+            const tube = gameState.tubes[tubeIndex];
+            
+            if (tube.liquids.length === CONFIG.maxLiquidPerTube) {
+                const firstColor = tube.liquids[0].value;
+                const allSame = tube.liquids.every(liquid => liquid.value === firstColor);
+                
+                if (allSame) {
+                    // 增加連鎖計數
+                    gameState.chainCount++;
+                    gameState.maxChain = Math.max(gameState.maxChain, gameState.chainCount);
+                    
+                    // 增加分數（連鎖倍率）
+                    const chainBonus = 100 * gameState.chainCount;
+                    gameState.score += chainBonus;
+                    
+                    // 顯示連鎖特效
+                    showChainEffect(tubeIndex, gameState.chainCount);
+                    
+                    // 檢查連鎖大師成就
+                    checkAchievements();
+                    
+                    // 更新顯示
+                    updateDisplay();
+                    
+                    showHint(`連鎖反應！第${gameState.chainCount}次連鎖 +${chainBonus}分`);
+                    
+                    // 檢查是否達成連鎖成就
+                    if (gameState.chainCount === 5) {
+                        unlockAchievement('chainMaster');
+                    }
+                } else {
+                    // 重置連鎖計數
+                    gameState.chainCount = 0;
+                }
+            } else {
+                // 重置連鎖計數
+                gameState.chainCount = 0;
+            }
+        }
+        
+        // 顯示連鎖特效
+        function showChainEffect(tubeIndex, chainCount) {
+            const tubeRect = gameState.tubes[tubeIndex].element.getBoundingClientRect();
+            
+            // 顯示連鎖數字
+            const chainText = document.createElement('div');
+            chainText.className = 'chain-counter';
+            chainText.textContent = `${chainCount} 連鎖！`;
+            chainText.style.left = `${tubeRect.left + tubeRect.width/2}px`;
+            chainText.style.top = `${tubeRect.top}px`;
+            
+            document.body.appendChild(chainText);
+            
+            // 3秒後移除
+            setTimeout(() => {
+                chainText.remove();
+            }, 1000);
+            
+            // 試管連鎖特效
+            gameState.tubes[tubeIndex].container.classList.add('combo-effect');
+            setTimeout(() => {
+                gameState.tubes[tubeIndex].container.classList.remove('combo-effect');
+            }, 300);
+            
+            // 大粒子爆炸效果
+            createExplosionEffect(tubeRect.left + tubeRect.width/2, tubeRect.top + tubeRect.height/2, 
+                                gameState.tubes[tubeIndex].liquids[0].value);
+        }
+        
+        // 創建爆炸粒子效果
+        function createExplosionEffect(x, y, color) {
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.background = color;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.width = `${10 + Math.random() * 15}px`;
+                particle.style.height = particle.style.width;
+                
+                document.body.appendChild(particle);
+                
+                // 爆炸效果
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 50 + Math.random() * 100;
+                const duration = 800 + Math.random() * 800;
+                
+                let progress = 0;
+                const animate = () => {
+                    progress += 16 / duration;
+                    
+                    if (progress < 1) {
+                        const currentX = x + Math.cos(angle) * distance * progress;
+                        const currentY = y + Math.sin(angle) * distance * progress;
+                        
+                        particle.style.left = `${currentX}px`;
+                        particle.style.top = `${currentY}px`;
+                        particle.style.opacity = 1 - progress;
+                        particle.style.transform = `scale(${1 - progress})`;
+                        
+                        requestAnimationFrame(animate);
+                    } else {
+                        particle.remove();
+                    }
+                };
+                animate();
+            }
         }
         
         // 抖動試管（錯誤提示）
@@ -1084,6 +1480,7 @@
             
             // 更新移動次數
             gameState.moves = Math.max(0, gameState.moves - 1);
+            gameState.chainCount = 0;
             
             // 更新顯示
             updateDisplay();
@@ -1128,6 +1525,9 @@
             gameState.isPlaying = true;
             gameState.time = 0;
             gameState.moves = 0;
+            gameState.chainCount = 0;
+            gameState.score = 0;
+            gameState.gamesPlayed++;
             
             elements.startBtn.innerHTML = '<span>⏸</span> 遊戲進行中';
             elements.startBtn.disabled = true;
@@ -1135,6 +1535,10 @@
             // 啟動計時器
             gameState.timer = setInterval(() => {
                 gameState.time++;
+                updateDisplay();
+                
+                // 每秒更新分數
+                gameState.score = calculateScore();
                 updateDisplay();
             }, 1000);
             
@@ -1150,12 +1554,22 @@
             elements.startBtn.innerHTML = '<span>▶</span> 開始遊戲';
             elements.startBtn.disabled = false;
             
-            // 計算分數
-            const score = calculateScore();
+            // 計算最終分數
+            gameState.score = calculateScore();
+            updateDisplay();
+            
+            // 檢查並解鎖成就
+            checkAndUnlockAchievements();
+            
+            // 更新排行榜
+            updateLeaderboardWithNewScore();
             
             if (isWin) {
                 elements.messageTitle.textContent = "恭喜勝利！";
                 elements.messageContent.textContent = `你成功完成了第${gameState.level}關！`;
+                
+                // 顯示解鎖的成就
+                showUnlockedAchievements();
             } else {
                 elements.messageTitle.textContent = "遊戲結束";
                 elements.messageContent.textContent = "請繼續努力！";
@@ -1163,7 +1577,7 @@
             
             elements.messageMoves.textContent = gameState.moves;
             elements.messageTime.textContent = gameState.time;
-            elements.messageScore.textContent = score;
+            elements.messageScore.textContent = gameState.score;
             
             elements.messageOverlay.style.display = 'flex';
         }
@@ -1173,8 +1587,10 @@
             const timeBonus = Math.max(0, 5000 - gameState.time * 10);
             const movesBonus = Math.max(0, 3000 - gameState.moves * 20);
             const levelBonus = gameState.level * 500;
+            const chainBonus = gameState.chainCount * 100;
+            const maxChainBonus = gameState.maxChain * 200;
             
-            return timeBonus + movesBonus + levelBonus;
+            return timeBonus + movesBonus + levelBonus + chainBonus + maxChainBonus;
         }
         
         // 下一關
@@ -1319,6 +1735,193 @@
             elements.moves.textContent = gameState.moves;
             elements.level.textContent = gameState.level;
             elements.time.textContent = gameState.time;
+            elements.chain.textContent = gameState.chainCount;
+            elements.score.textContent = gameState.score;
+        }
+        
+        // 成就系統函數
+        function loadAchievements() {
+            // 從本地存儲加載已解鎖的成就
+            Object.keys(ACHIEVEMENTS).forEach(key => {
+                if (gameState.achievements[key]) {
+                    ACHIEVEMENTS[key].unlocked = true;
+                }
+            });
+        }
+        
+        function saveAchievements() {
+            // 保存到本地存儲
+            const unlockedAchievements = {};
+            Object.keys(ACHIEVEMENTS).forEach(key => {
+                if (ACHIEVEMENTS[key].unlocked) {
+                    unlockedAchievements[key] = true;
+                }
+            });
+            localStorage.setItem('tubeAchievements', JSON.stringify(unlockedAchievements));
+            gameState.achievements = unlockedAchievements;
+        }
+        
+        function renderAchievements() {
+            elements.achievementsContainer.innerHTML = '';
+            
+            Object.values(ACHIEVEMENTS).forEach(achievement => {
+                const badge = document.createElement('div');
+                badge.className = 'achievement-badge';
+                badge.innerHTML = `${achievement.unlocked ? achievement.icon : '🔒'} ${achievement.name}`;
+                badge.title = achievement.description + (achievement.unlocked ? ' (已解鎖)' : ' (未解鎖)');
+                badge.style.opacity = achievement.unlocked ? '1' : '0.5';
+                badge.style.cursor = 'help';
+                
+                elements.achievementsContainer.appendChild(badge);
+            });
+        }
+        
+        function checkAchievements() {
+            Object.values(ACHIEVEMENTS).forEach(achievement => {
+                if (!achievement.unlocked && achievement.check()) {
+                    unlockAchievement(achievement.id);
+                }
+            });
+        }
+        
+        function checkAndUnlockAchievements() {
+            let unlockedCount = 0;
+            
+            Object.values(ACHIEVEMENTS).forEach(achievement => {
+                if (!achievement.unlocked && achievement.check()) {
+                    unlockAchievement(achievement.id);
+                    unlockedCount++;
+                }
+            });
+            
+            return unlockedCount;
+        }
+        
+        function unlockAchievement(achievementId) {
+            if (ACHIEVEMENTS[achievementId] && !ACHIEVEMENTS[achievementId].unlocked) {
+                ACHIEVEMENTS[achievementId].unlocked = true;
+                saveAchievements();
+                renderAchievements();
+                
+                // 顯示成就解鎖通知
+                showAchievementUnlocked(achievementId);
+                
+                return true;
+            }
+            return false;
+        }
+        
+        function showAchievementUnlocked(achievementId) {
+            const achievement = ACHIEVEMENTS[achievementId];
+            if (!achievement) return;
+            
+            // 創建解鎖通知
+            const notification = document.createElement('div');
+            notification.className = 'achievement-badge';
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.zIndex = '1002';
+            notification.style.fontSize = '1.2rem';
+            notification.style.padding = '15px 25px';
+            notification.style.animation = 'badgeGlow 1s infinite';
+            notification.innerHTML = `🎉 成就解鎖：${achievement.icon} ${achievement.name}`;
+            notification.title = achievement.description;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒後移除
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+            
+            // 播放音效（如果有的話）
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
+                audio.volume = 0.3;
+                audio.play();
+            } catch (e) {
+                // 忽略音頻錯誤
+            }
+        }
+        
+        function showUnlockedAchievements() {
+            const newlyUnlocked = Object.values(ACHIEVEMENTS).filter(
+                a => a.unlocked && !gameState.achievements[a.id]
+            );
+            
+            if (newlyUnlocked.length > 0) {
+                elements.achievementsUnlocked.innerHTML = `
+                    <h3 style="color: #feca57; margin-bottom: 15px;">🎉 本局解鎖成就</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                        ${newlyUnlocked.map(a => 
+                            `<div class="achievement-badge">${a.icon} ${a.name}</div>`
+                        ).join('')}
+                    </div>
+                `;
+            } else {
+                elements.achievementsUnlocked.innerHTML = '';
+            }
+        }
+        
+        // 排行榜函數
+        function updateLeaderboard() {
+            // 按分數排序
+            gameState.leaderboard.sort((a, b) => b.score - a.score);
+            
+            elements.leaderboardList.innerHTML = '';
+            
+            // 顯示前10名
+            gameState.leaderboard.slice(0, 10).forEach((entry, index) => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <div>
+                        <span class="rank">${index + 1}.</span>
+                        <span>${entry.name || '匿名玩家'}</span>
+                    </div>
+                    <div>
+                        <span style="color: #feca57;">${entry.score}</span>
+                        <span style="font-size: 0.8rem; color: #888; margin-left: 5px;">Lv.${entry.level}</span>
+                    </div>
+                `;
+                elements.leaderboardList.appendChild(item);
+            });
+            
+            // 如果沒有記錄，顯示提示
+            if (gameState.leaderboard.length === 0) {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = '<div style="text-align: center; width: 100%; color: #888;">暫無記錄</div>';
+                elements.leaderboardList.appendChild(item);
+            }
+        }
+        
+        function updateLeaderboardWithNewScore() {
+            const playerName = prompt('恭喜你獲得高分！請輸入你的名字（可選）：', '玩家' + Math.floor(Math.random() * 1000));
+            
+            const newEntry = {
+                name: playerName || '匿名玩家',
+                score: gameState.score,
+                level: gameState.level,
+                moves: gameState.moves,
+                time: gameState.time,
+                date: new Date().toISOString()
+            };
+            
+            gameState.leaderboard.push(newEntry);
+            gameState.leaderboard.sort((a, b) => b.score - a.score);
+            
+            // 只保留前50名
+            if (gameState.leaderboard.length > 50) {
+                gameState.leaderboard = gameState.leaderboard.slice(0, 50);
+            }
+            
+            // 保存到本地存儲
+            localStorage.setItem('tubeLeaderboard', JSON.stringify(gameState.leaderboard));
+            
+            updateLeaderboard();
         }
         
         // 設置事件監聽器
@@ -1329,6 +1932,20 @@
             elements.undoBtn.addEventListener('click', undoMove);
             elements.solveBtn.addEventListener('click', solvePuzzle);
             elements.closeBtn.addEventListener('click', nextLevel);
+            
+            // 排行榜按鈕
+            elements.leaderboardBtn.addEventListener('click', () => {
+                elements.leaderboard.classList.toggle('show');
+                updateLeaderboard();
+            });
+            
+            // 點擊其他地方關閉排行榜
+            document.addEventListener('click', (e) => {
+                if (!elements.leaderboard.contains(e.target) && 
+                    !elements.leaderboardBtn.contains(e.target)) {
+                    elements.leaderboard.classList.remove('show');
+                }
+            });
         }
         
         // 初始化遊戲

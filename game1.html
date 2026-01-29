@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>避障遊戲 - 躲避越多越高分</title>
+    <title>極限避障挑戰 - 科幻跑酷版</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
         }
         
         body {
-            background-color: #0a0a0a;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #0f3460);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -34,61 +34,105 @@
         
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             width: 100%;
+            padding: 25px;
+            background: rgba(20, 20, 35, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
         
         h1 {
-            color: #00ffcc;
-            font-size: 2.8rem;
-            margin-bottom: 8px;
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
-            letter-spacing: 2px;
+            background: linear-gradient(90deg, #00ffcc, #0099ff, #ff00ff, #ff9900);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+            letter-spacing: 3px;
+            font-weight: 900;
         }
         
         .subtitle {
-            color: #aaa;
-            font-size: 1.2rem;
-            margin-bottom: 25px;
+            color: #b0b0ff;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            font-weight: 300;
         }
         
         .game-info {
             display: flex;
             justify-content: space-between;
             width: 800px;
-            margin-bottom: 15px;
-            background-color: rgba(20, 20, 30, 0.8);
-            padding: 15px 25px;
-            border-radius: 10px;
-            border: 1px solid #333;
+            margin-bottom: 20px;
+            background-color: rgba(20, 20, 35, 0.9);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
         
-        .score-container, .high-score-container {
+        .score-container, .high-score-container, .combo-container, .powerup-container {
             text-align: center;
+            flex: 1;
+            padding: 0 15px;
+            position: relative;
         }
         
-        .score-label, .high-score-label {
+        .score-container:not(:last-child)::after,
+        .high-score-container:not(:last-child)::after,
+        .combo-container:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 1px;
+            background: rgba(0, 200, 255, 0.3);
+        }
+        
+        .score-label, .high-score-label, .combo-label, .powerup-label {
             font-size: 1.1rem;
-            color: #aaa;
-            margin-bottom: 5px;
+            color: #a0a0ff;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
         }
         
         .score-value, .high-score-value {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             font-weight: bold;
             color: #00ffcc;
-            text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.7);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .combo-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #ff9900;
+            text-shadow: 0 0 15px rgba(255, 153, 0, 0.7);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .powerup-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #ff00ff;
+            text-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
+            font-family: 'Courier New', monospace;
         }
         
         .game-container {
             position: relative;
             width: 800px;
             height: 500px;
-            background-color: #000;
-            border-radius: 8px;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 150, 255, 0.2);
-            border: 2px solid #222;
+            box-shadow: 0 0 50px rgba(0, 150, 255, 0.4);
+            border: 3px solid rgba(0, 200, 255, 0.5);
         }
         
         #gameCanvas {
@@ -101,36 +145,43 @@
             justify-content: space-between;
             width: 800px;
             margin-top: 25px;
+            gap: 25px;
         }
         
         .instructions {
-            background-color: rgba(20, 20, 30, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            width: 48%;
-            border: 1px solid #333;
+            background-color: rgba(20, 20, 35, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            flex: 1;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
         
         .instructions h3 {
             color: #00ffcc;
-            margin-bottom: 10px;
-            font-size: 1.3rem;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid rgba(0, 200, 255, 0.3);
+            padding-bottom: 10px;
         }
         
         .instructions p {
             color: #ccc;
-            margin-bottom: 8px;
-            line-height: 1.5;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            font-size: 1.1rem;
         }
         
         .key {
             display: inline-block;
-            background-color: #333;
+            background: linear-gradient(135deg, #333, #555);
             color: #fff;
-            padding: 3px 8px;
-            border-radius: 4px;
+            padding: 5px 12px;
+            border-radius: 8px;
             font-weight: bold;
-            margin: 0 3px;
+            margin: 0 5px;
+            border: 1px solid #666;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
         }
         
         .game-controls {
@@ -138,77 +189,134 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 48%;
-            background-color: rgba(20, 20, 30, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #333;
+            flex: 1;
+            background-color: rgba(20, 20, 35, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
         
         .start-btn {
-            background: linear-gradient(to bottom, #00cc99, #009973);
+            background: linear-gradient(135deg, #00cc99, #0066ff);
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.3rem;
+            padding: 18px 50px;
+            font-size: 1.4rem;
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0, 204, 153, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 204, 153, 0.4);
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         .start-btn:hover {
-            background: linear-gradient(to bottom, #00ffcc, #00cc99);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 204, 153, 0.4);
+            background: linear-gradient(135deg, #00ffcc, #0099ff);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(0, 255, 204, 0.6);
         }
         
         .start-btn:active {
-            transform: translateY(1px);
+            transform: translateY(-2px);
         }
         
         .difficulty {
             display: flex;
+            flex-direction: column;
             align-items: center;
             margin-top: 10px;
             color: #ccc;
+            width: 100%;
         }
         
         .difficulty label {
-            margin-right: 15px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: #a0a0ff;
         }
         
         .difficulty select {
-            background-color: #222;
+            background-color: rgba(30, 30, 50, 0.9);
             color: white;
-            border: 1px solid #444;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 1rem;
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .difficulty select:hover {
+            border-color: #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
         }
         
         .mobile-controls {
             display: none;
-            margin-top: 20px;
+            margin-top: 25px;
             justify-content: center;
-            gap: 20px;
+            gap: 30px;
         }
         
         .mobile-btn {
-            background-color: rgba(0, 150, 255, 0.7);
+            background: linear-gradient(135deg, rgba(0, 150, 255, 0.9), rgba(0, 100, 200, 0.9));
             color: white;
             border: none;
-            width: 70px;
-            height: 70px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
-            font-size: 2rem;
+            font-size: 2.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             user-select: none;
+            box-shadow: 0 8px 20px rgba(0, 150, 255, 0.4);
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mobile-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 10px rgba(0, 150, 255, 0.6);
+        }
+        
+        .mobile-btn::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.3s;
+        }
+        
+        .mobile-btn:active::after {
+            transform: scale(1);
         }
         
         .game-over {
@@ -217,54 +325,127 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(0, 0, 0, 0.9);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+        
+        .game-over-content {
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 35, 0.95));
+            padding: 50px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            animation: popIn 0.5s ease-out;
+        }
+        
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         
         .game-over h2 {
-            color: #ff3366;
-            font-size: 3.5rem;
+            background: linear-gradient(90deg, #ff3366, #ff9900);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 4rem;
             margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(255, 51, 102, 0.7);
+            text-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
         }
         
         .final-score {
             color: #00ffcc;
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 30px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.7);
         }
         
         .restart-btn {
-            background: linear-gradient(to bottom, #ff3366, #cc0044);
+            background: linear-gradient(135deg, #ff3366, #ff9900);
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.3rem;
+            padding: 18px 50px;
+            font-size: 1.4rem;
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
+            box-shadow: 0 8px 20px rgba(255, 51, 102, 0.4);
+            letter-spacing: 2px;
         }
         
         .restart-btn:hover {
-            background: linear-gradient(to bottom, #ff5588, #ff3366);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 51, 102, 0.4);
+            background: linear-gradient(135deg, #ff5588, #ffbb33);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(255, 85, 136, 0.6);
+        }
+        
+        .achievement-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 35, 0.95));
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #ff9900;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 100;
+            max-width: 300px;
+        }
+        
+        .achievement-notification.show {
+            transform: translateX(0);
+        }
+        
+        .achievement-title {
+            color: #ff9900;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .achievement-desc {
+            color: #ccc;
+            font-size: 1rem;
+        }
+        
+        .powerup-active {
+            animation: powerupGlow 0.5s infinite alternate;
+        }
+        
+        @keyframes powerupGlow {
+            from { box-shadow: 0 0 20px rgba(255, 0, 255, 0.7); }
+            to { box-shadow: 0 0 40px rgba(255, 0, 255, 1); }
+        }
+        
+        .combo-active {
+            animation: comboGlow 0.3s infinite alternate;
+        }
+        
+        @keyframes comboGlow {
+            from { text-shadow: 0 0 10px rgba(255, 153, 0, 0.7); }
+            to { text-shadow: 0 0 20px rgba(255, 153, 0, 1); }
         }
         
         footer {
-            margin-top: 30px;
+            margin-top: 40px;
             color: #666;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 1rem;
             width: 100%;
             padding-top: 20px;
-            border-top: 1px solid #222;
+            border-top: 1px solid rgba(0, 200, 255, 0.2);
         }
         
         /* 響應式設計 */
@@ -274,12 +455,11 @@
             }
             
             .game-container {
-                height: 70vh;
+                height: 60vh;
             }
             
             .controls {
                 flex-direction: column;
-                gap: 20px;
             }
             
             .instructions, .game-controls {
@@ -289,20 +469,42 @@
             .mobile-controls {
                 display: flex;
             }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .game-info {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+            
+            .score-container, .high-score-container, .combo-container, .powerup-container {
+                flex: 0 0 calc(50% - 20px);
+                padding: 10px;
+            }
+            
+            .score-container::after,
+            .high-score-container::after,
+            .combo-container::after {
+                display: none;
+            }
         }
         
         @media (max-width: 600px) {
             h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
             
             .subtitle {
                 font-size: 1rem;
             }
             
-            .game-info {
-                flex-direction: column;
-                gap: 15px;
+            .mobile-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
             }
         }
     </style>
@@ -310,8 +512,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>避障挑戰</h1>
-            <div class="subtitle">控制方塊躲避障礙物，躲避得越多分數越高！</div>
+            <h1>⚡ 極限避障挑戰 ⚡</h1>
+            <div class="subtitle">科幻跑酷 | 連擊系統 | 道具收集 | 成就解鎖</div>
         </header>
         
         <div class="game-info">
@@ -323,21 +525,32 @@
                 <div class="high-score-label">最高分數</div>
                 <div class="high-score-value">0</div>
             </div>
+            <div class="combo-container">
+                <div class="combo-label">連擊倍數</div>
+                <div class="combo-value">1x</div>
+            </div>
+            <div class="powerup-container">
+                <div class="powerup-label">道具時間</div>
+                <div class="powerup-value">0s</div>
+            </div>
         </div>
         
         <div class="game-container">
             <canvas id="gameCanvas" width="800" height="500"></canvas>
             
             <div class="game-over">
-                <h2>遊戲結束！</h2>
-                <div class="final-score">得分: <span id="finalScore">0</span></div>
-                <button class="restart-btn">再玩一次</button>
+                <div class="game-over-content">
+                    <h2>遊戲結束！</h2>
+                    <div class="final-score">得分: <span id="finalScore">0</span></div>
+                    <div id="comboAchievement" style="color: #ff9900; margin-bottom: 20px; font-size: 1.3rem;"></div>
+                    <button class="restart-btn">再挑戰一次</button>
+                </div>
             </div>
         </div>
         
         <div class="mobile-controls">
             <button class="mobile-btn" id="upBtn">↑</button>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
                 <button class="mobile-btn" id="leftBtn">←</button>
                 <button class="mobile-btn" id="rightBtn">→</button>
             </div>
@@ -346,30 +559,38 @@
         
         <div class="controls">
             <div class="instructions">
-                <h3>遊戲說明</h3>
-                <p>使用 <span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> 鍵控制方塊移動</p>
-                <p>躲避從右側出現的紅色障礙物</p>
-                <p>每成功躲避一個障礙物得10分</p>
-                <p>遊戲難度會隨分數增加而提高</p>
-                <p>碰到障礙物或邊界遊戲結束</p>
+                <h3>🎮 遊戲說明</h3>
+                <p><span class="key">↑ ↓ ← →</span> 控制太空船移動</p>
+                <p>躲避紅色障礙物，收集藍色道具</p>
+                <p>連擊系統：連續躲避障礙物獲得倍數分數</p>
+                <p>道具系統：收集道具獲得特殊能力</p>
+                <p>成就系統：達成特定條件解鎖成就</p>
+                <p style="color: #00ffcc; margin-top: 10px;">⚡ 試試看你能達到多少連擊！ ⚡</p>
             </div>
             
             <div class="game-controls">
-                <button class="start-btn">開始遊戲</button>
+                <button class="start-btn">開始挑戰</button>
                 <div class="difficulty">
-                    <label for="difficulty">難度:</label>
+                    <label for="difficulty">難度等級:</label>
                     <select id="difficulty">
-                        <option value="easy">簡單</option>
-                        <option value="medium" selected>中等</option>
-                        <option value="hard">困難</option>
+                        <option value="easy">新手試煉</option>
+                        <option value="medium" selected>標準挑戰</option>
+                        <option value="hard">高手模式</option>
+                        <option value="extreme">極限考驗</option>
                     </select>
                 </div>
             </div>
         </div>
         
         <footer>
-            <p>HTML5 避障遊戲 - 躲避越多分數越高 | 使用 Canvas 製作</p>
+            <p>科幻避障遊戲 | HTML5 Canvas 製作 | 連擊系統 + 道具收集 + 成就解鎖</p>
         </footer>
+    </div>
+
+    <!-- 成就通知 -->
+    <div class="achievement-notification" id="achievementNotification">
+        <div class="achievement-title" id="achievementTitle">成就解鎖！</div>
+        <div class="achievement-desc" id="achievementDesc">達成條件描述</div>
     </div>
 
     <script>
@@ -378,11 +599,17 @@
         const ctx = canvas.getContext('2d');
         const scoreElement = document.querySelector('.score-value');
         const highScoreElement = document.querySelector('.high-score-value');
+        const comboElement = document.querySelector('.combo-value');
+        const powerupElement = document.querySelector('.powerup-value');
         const finalScoreElement = document.getElementById('finalScore');
         const startButton = document.querySelector('.start-btn');
         const restartButton = document.querySelector('.restart-btn');
         const gameOverScreen = document.querySelector('.game-over');
         const difficultySelect = document.getElementById('difficulty');
+        const achievementNotification = document.getElementById('achievementNotification');
+        const achievementTitle = document.getElementById('achievementTitle');
+        const achievementDesc = document.getElementById('achievementDesc');
+        const comboAchievement = document.getElementById('comboAchievement');
         
         // 行動控制按鈕
         const upBtn = document.getElementById('upBtn');
@@ -394,37 +621,117 @@
         let gameRunning = false;
         let score = 0;
         let highScore = localStorage.getItem('highScore') || 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let comboMultiplier = 1;
+        let comboTimeout = null;
         let animationId;
+        let powerupActive = false;
+        let powerupType = null;
+        let powerupTime = 0;
+        let powerupTimer = null;
         
-        // 玩家屬性
+        // 玩家屬性 - 升級為太空船
         const player = {
             x: 100,
             y: canvas.height / 2,
-            width: 30,
-            height: 30,
-            speed: 7,
-            color: '#00ffcc'
+            width: 40,
+            height: 40,
+            speed: 8,
+            color: '#00ffcc',
+            trail: [],
+            trailLength: 15,
+            rotation: 0
         };
         
         // 障礙物陣列
         let obstacles = [];
         
+        // 道具陣列
+        let powerups = [];
+        
+        // 成就系統
+        const achievements = {
+            firstGame: { name: "初次挑戰", desc: "完成第一次遊戲", unlocked: false },
+            score100: { name: "百分達人", desc: "獲得100分", unlocked: false },
+            score500: { name: "五百王者", desc: "獲得500分", unlocked: false },
+            combo10: { name: "連擊高手", desc: "達到10連擊", unlocked: false },
+            combo20: { name: "連擊大師", desc: "達到20連擊", unlocked: false },
+            noMiss: { name: "完美無傷", desc: "連續躲避30個障礙", unlocked: false },
+            powerupCollector: { name: "道具收藏家", desc: "收集10個道具", unlocked: false },
+            speedDemon: { name: "速度狂人", desc: "極限難度下獲得200分", unlocked: false }
+        };
+        
+        let unlockedAchievements = JSON.parse(localStorage.getItem('achievements') || '{}');
+        let totalPowerupsCollected = parseInt(localStorage.getItem('powerupsCollected') || '0');
+        let gamesPlayed = parseInt(localStorage.getItem('gamesPlayed') || '0');
+        
         // 難度設定
         const difficulties = {
-            easy: { obstacleSpeed: 3, spawnRate: 80, obstacleWidth: 40 },
-            medium: { obstacleSpeed: 5, spawnRate: 60, obstacleWidth: 35 },
-            hard: { obstacleSpeed: 7, spawnRate: 40, obstacleWidth: 30 }
+            easy: { obstacleSpeed: 3, spawnRate: 80, obstacleWidth: 40, powerupRate: 0.003 },
+            medium: { obstacleSpeed: 5, spawnRate: 60, obstacleWidth: 35, powerupRate: 0.005 },
+            hard: { obstacleSpeed: 7, spawnRate: 40, obstacleWidth: 30, powerupRate: 0.008 },
+            extreme: { obstacleSpeed: 9, spawnRate: 30, obstacleWidth: 25, powerupRate: 0.01 }
         };
         
         let currentDifficulty = difficulties.medium;
         
+        // 道具類型
+        const powerupTypes = {
+            shield: { 
+                color: '#0099ff', 
+                duration: 5000, 
+                effect: function() { 
+                    player.color = '#0099ff';
+                    player.width = 50;
+                    player.height = 50;
+                },
+                clear: function() {
+                    player.color = '#00ffcc';
+                    player.width = 40;
+                    player.height = 40;
+                }
+            },
+            slow: { 
+                color: '#ff9900', 
+                duration: 4000, 
+                effect: function() { 
+                    obstacles.forEach(o => o.speed = o.originalSpeed * 0.5);
+                },
+                clear: function() {
+                    obstacles.forEach(o => o.speed = o.originalSpeed);
+                }
+            },
+            double: { 
+                color: '#ff00ff', 
+                duration: 6000, 
+                effect: function() { 
+                    comboMultiplier = 2;
+                },
+                clear: function() {
+                    comboMultiplier = 1;
+                }
+            }
+        };
+        
         // 初始化遊戲
         function initGame() {
             score = 0;
+            combo = 0;
+            maxCombo = 0;
+            comboMultiplier = 1;
             obstacles = [];
+            powerups = [];
             player.x = 100;
             player.y = canvas.height / 2;
-            updateScore();
+            player.trail = [];
+            player.rotation = 0;
+            
+            if (powerupActive) {
+                deactivatePowerup();
+            }
+            
+            updateDisplay();
             highScoreElement.textContent = highScore;
             
             // 設置難度
@@ -434,6 +741,15 @@
             gameRunning = true;
             gameOverScreen.style.display = 'none';
             
+            // 增加遊戲次數
+            gamesPlayed++;
+            localStorage.setItem('gamesPlayed', gamesPlayed);
+            
+            // 第一次遊戲成就
+            if (gamesPlayed === 1 && !unlockedAchievements.firstGame) {
+                unlockAchievement('firstGame');
+            }
+            
             // 開始遊戲循環
             if (animationId) {
                 cancelAnimationFrame(animationId);
@@ -441,20 +757,65 @@
             gameLoop();
         }
         
-        // 繪製玩家
+        // 繪製玩家（太空船）
         function drawPlayer() {
+            // 繪製尾跡
+            for (let i = 0; i < player.trail.length; i++) {
+                const point = player.trail[i];
+                const alpha = (i / player.trail.length) * 0.5;
+                ctx.fillStyle = `rgba(0, 255, 204, ${alpha})`;
+                ctx.fillRect(point.x, point.y, player.width, player.height);
+            }
+            
+            // 更新尾跡
+            player.trail.push({x: player.x, y: player.y});
+            if (player.trail.length > player.trailLength) {
+                player.trail.shift();
+            }
+            
+            // 繪製太空船主體
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            ctx.rotate(player.rotation);
+            
+            // 太空船外殼
             ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.beginPath();
+            ctx.moveTo(player.width/2, 0);
+            ctx.lineTo(-player.width/2, -player.height/3);
+            ctx.lineTo(-player.width/2, player.height/3);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 太空船引擎噴射
+            ctx.fillStyle = '#ff9900';
+            ctx.beginPath();
+            ctx.moveTo(-player.width/2, -player.height/4);
+            ctx.lineTo(-player.width/2 - 10, 0);
+            ctx.lineTo(-player.width/2, player.height/4);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 太空船駕駛艙
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(player.width/4, 0, player.width/6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
             
             // 添加發光效果
-            ctx.shadowColor = player.color;
-            ctx.shadowBlur = 15;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            ctx.shadowBlur = 0;
-            
-            // 添加玩家內部細節
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(player.x + 8, player.y + 8, player.width - 16, player.height - 16);
+            if (powerupActive) {
+                ctx.shadowColor = powerupTypes[powerupType].color;
+                ctx.shadowBlur = 20;
+                ctx.fillRect(player.x - 10, player.y - 10, player.width + 20, player.height + 20);
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.shadowColor = player.color;
+                ctx.shadowBlur = 15;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+                ctx.shadowBlur = 0;
+            }
         }
         
         // 創建障礙物
@@ -470,7 +831,26 @@
                 height: height,
                 gap: gap,
                 color: '#ff3366',
-                passed: false
+                passed: false,
+                speed: currentDifficulty.obstacleSpeed,
+                originalSpeed: currentDifficulty.obstacleSpeed
+            });
+        }
+        
+        // 創建道具
+        function createPowerup() {
+            const types = Object.keys(powerupTypes);
+            const type = types[Math.floor(Math.random() * types.length)];
+            const powerup = powerupTypes[type];
+            
+            powerups.push({
+                x: canvas.width,
+                y: Math.floor(Math.random() * (canvas.height - 30)),
+                width: 25,
+                height: 25,
+                color: powerup.color,
+                type: type,
+                rotation: 0
             });
         }
         
@@ -489,16 +869,62 @@
                     canvas.height - (obstacle.y + obstacle.height + obstacle.gap)
                 );
                 
-                // 添加障礙物邊框
-                ctx.strokeStyle = '#ff6699';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(obstacle.x, 0, obstacle.width, obstacle.y);
-                ctx.strokeRect(
-                    obstacle.x, 
-                    obstacle.y + obstacle.height + obstacle.gap, 
-                    obstacle.width, 
-                    canvas.height - (obstacle.y + obstacle.height + obstacle.gap)
-                );
+                // 添加動態紋理
+                ctx.fillStyle = '#ff6699';
+                for (let i = 0; i < obstacle.height; i += 10) {
+                    ctx.fillRect(obstacle.x, i, obstacle.width, 5);
+                }
+                for (let i = obstacle.y + obstacle.height + obstacle.gap; i < canvas.height; i += 10) {
+                    ctx.fillRect(obstacle.x, i, obstacle.width, 5);
+                }
+            });
+        }
+        
+        // 繪製道具
+        function drawPowerups() {
+            powerups.forEach(powerup => {
+                ctx.save();
+                ctx.translate(powerup.x + powerup.width/2, powerup.y + powerup.height/2);
+                powerup.rotation += 0.05;
+                ctx.rotate(powerup.rotation);
+                
+                // 道具外框
+                ctx.fillStyle = powerup.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, powerup.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 道具內部
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 0, powerup.width/4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 道具符號
+                ctx.fillStyle = powerup.color;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                switch(powerup.type) {
+                    case 'shield':
+                        ctx.fillText('🛡️', 0, 0);
+                        break;
+                    case 'slow':
+                        ctx.fillText('⏱️', 0, 0);
+                        break;
+                    case 'double':
+                        ctx.fillText('2X', 0, 0);
+                        break;
+                }
+                
+                ctx.restore();
+                
+                // 添加發光效果
+                ctx.shadowColor = powerup.color;
+                ctx.shadowBlur = 15;
+                ctx.fillRect(powerup.x - 5, powerup.y - 5, powerup.width + 10, powerup.height + 10);
+                ctx.shadowBlur = 0;
             });
         }
         
@@ -506,13 +932,18 @@
         function updateObstacles() {
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 const obstacle = obstacles[i];
-                obstacle.x -= currentDifficulty.obstacleSpeed;
+                obstacle.x -= obstacle.speed;
                 
                 // 如果障礙物通過玩家且未被計分
                 if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
                     obstacle.passed = true;
-                    score += 10;
-                    updateScore();
+                    addScore(10);
+                    addCombo();
+                    
+                    // 完美無傷成就
+                    if (combo >= 30 && !unlockedAchievements.noMiss) {
+                        unlockAchievement('noMiss');
+                    }
                 }
                 
                 // 移除離開畫布的障礙物
@@ -527,8 +958,47 @@
             }
         }
         
+        // 更新道具
+        function updatePowerups() {
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                const powerup = powerups[i];
+                powerup.x -= currentDifficulty.obstacleSpeed;
+                
+                // 檢查道具收集
+                if (checkCollision(player, powerup)) {
+                    activatePowerup(powerup.type);
+                    powerups.splice(i, 1);
+                    totalPowerupsCollected++;
+                    localStorage.setItem('powerupsCollected', totalPowerupsCollected);
+                    
+                    // 道具收藏家成就
+                    if (totalPowerupsCollected >= 10 && !unlockedAchievements.powerupCollector) {
+                        unlockAchievement('powerupCollector');
+                    }
+                }
+                
+                // 移除離開畫布的道具
+                if (powerup.x + powerup.width < 0) {
+                    powerups.splice(i, 1);
+                }
+            }
+            
+            // 隨機生成新道具
+            if (Math.random() < currentDifficulty.powerupRate && gameRunning) {
+                createPowerup();
+            }
+        }
+        
         // 碰撞檢測
-        function checkCollision() {
+        function checkCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
+        
+        // 檢查玩家碰撞
+        function checkPlayerCollision() {
             // 檢查邊界碰撞
             if (player.y < 0 || player.y + player.height > canvas.height ||
                 player.x < 0 || player.x + player.width > canvas.width) {
@@ -558,9 +1028,23 @@
             return false;
         }
         
-        // 更新分數
-        function updateScore() {
-            scoreElement.textContent = score;
+        // 增加分數
+        function addScore(points) {
+            score += points * comboMultiplier;
+            updateDisplay();
+            
+            // 分數成就
+            if (score >= 100 && !unlockedAchievements.score100) {
+                unlockAchievement('score100');
+            }
+            if (score >= 500 && !unlockedAchievements.score500) {
+                unlockAchievement('score500');
+            }
+            
+            // 速度狂人成就（極限難度下）
+            if (difficultySelect.value === 'extreme' && score >= 200 && !unlockedAchievements.speedDemon) {
+                unlockAchievement('speedDemon');
+            }
             
             // 更新最高分數
             if (score > highScore) {
@@ -568,59 +1052,188 @@
                 highScoreElement.textContent = highScore;
                 localStorage.setItem('highScore', highScore);
             }
+        }
+        
+        // 增加連擊
+        function addCombo() {
+            combo++;
+            maxCombo = Math.max(maxCombo, combo);
             
-            // 隨分數增加提高難度
-            if (score > 100 && currentDifficulty !== difficulties.hard) {
-                currentDifficulty = difficulties.hard;
-                difficultySelect.value = 'hard';
-            } else if (score > 50 && currentDifficulty !== difficulties.medium) {
-                currentDifficulty = difficulties.medium;
-                difficultySelect.value = 'medium';
+            // 連擊成就
+            if (combo >= 10 && !unlockedAchievements.combo10) {
+                unlockAchievement('combo10');
             }
+            if (combo >= 20 && !unlockedAchievements.combo20) {
+                unlockAchievement('combo20');
+            }
+            
+            // 更新連擊顯示
+            updateComboDisplay();
+            
+            // 重置連擊計時器
+            if (comboTimeout) {
+                clearTimeout(comboTimeout);
+            }
+            
+            comboTimeout = setTimeout(() => {
+                combo = 0;
+                updateComboDisplay();
+            }, 2000);
+        }
+        
+        // 更新連擊顯示
+        function updateComboDisplay() {
+            comboMultiplier = 1 + Math.floor(combo / 5);
+            comboElement.textContent = `${combo}x`;
+            comboElement.classList.toggle('combo-active', combo >= 5);
+            
+            if (combo >= 10) {
+                comboElement.style.color = '#ff3366';
+            } else if (combo >= 5) {
+                comboElement.style.color = '#ff9900';
+            } else {
+                comboElement.style.color = '#00ffcc';
+            }
+        }
+        
+        // 激活道具
+        function activatePowerup(type) {
+            if (powerupActive) {
+                deactivatePowerup();
+            }
+            
+            powerupActive = true;
+            powerupType = type;
+            powerupTime = powerupTypes[type].duration;
+            
+            // 應用道具效果
+            powerupTypes[type].effect();
+            
+            // 開始道具計時器
+            powerupTimer = setInterval(() => {
+                powerupTime -= 100;
+                powerupElement.textContent = `${Math.ceil(powerupTime/1000)}s`;
+                powerupElement.classList.add('powerup-active');
+                
+                if (powerupTime <= 0) {
+                    deactivatePowerup();
+                }
+            }, 100);
+        }
+        
+        // 停用道具
+        function deactivatePowerup() {
+            if (!powerupActive) return;
+            
+            powerupActive = false;
+            powerupTypes[powerupType].clear();
+            powerupTime = 0;
+            powerupElement.textContent = "0s";
+            powerupElement.classList.remove('powerup-active');
+            
+            clearInterval(powerupTimer);
+        }
+        
+        // 解鎖成就
+        function unlockAchievement(id) {
+            if (!achievements[id] || unlockedAchievements[id]) return;
+            
+            achievements[id].unlocked = true;
+            unlockedAchievements[id] = true;
+            localStorage.setItem('achievements', JSON.stringify(unlockedAchievements));
+            
+            // 顯示成就通知
+            showAchievementNotification(achievements[id].name, achievements[id].desc);
+        }
+        
+        // 顯示成就通知
+        function showAchievementNotification(title, description) {
+            achievementTitle.textContent = `🏆 ${title}`;
+            achievementDesc.textContent = description;
+            
+            achievementNotification.classList.add('show');
+            
+            setTimeout(() => {
+                achievementNotification.classList.remove('show');
+            }, 3000);
         }
         
         // 遊戲結束
         function gameOver() {
             gameRunning = false;
             finalScoreElement.textContent = score;
+            
+            // 顯示連擊成就
+            if (maxCombo >= 20) {
+                comboAchievement.textContent = `🔥 最大連擊: ${maxCombo} 次!`;
+            } else if (maxCombo >= 10) {
+                comboAchievement.textContent = `⭐ 最大連擊: ${maxCombo} 次`;
+            } else {
+                comboAchievement.textContent = '';
+            }
+            
             gameOverScreen.style.display = 'flex';
             
             if (animationId) {
                 cancelAnimationFrame(animationId);
             }
+            
+            if (powerupActive) {
+                deactivatePowerup();
+            }
         }
         
         // 繪製背景
         function drawBackground() {
-            // 黑色背景
-            ctx.fillStyle = '#000';
+            // 漸層背景
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#0a0a0a');
+            gradient.addColorStop(1, '#1a1a2e');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 繪製網格
-            ctx.strokeStyle = 'rgba(50, 50, 70, 0.3)';
-            ctx.lineWidth = 1;
+            // 繪製星空
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 2;
+                ctx.fillRect(x, y, size, size);
+            }
             
-            // 垂直線
-            for (let x = 0; x < canvas.width; x += 40) {
+            // 繪製移動的星雲
+            const time = Date.now() * 0.001;
+            for (let i = 0; i < 5; i++) {
+                const x = (Math.sin(time * 0.5 + i) * 100 + canvas.width * 0.5) % canvas.width;
+                const y = (Math.cos(time * 0.3 + i) * 100 + canvas.height * 0.5) % canvas.height;
+                const radius = 50 + Math.sin(time + i) * 20;
+                
+                const nebulaGradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                nebulaGradient.addColorStop(0, `rgba(${100 + i * 30}, ${100}, ${200}, 0.3)`);
+                nebulaGradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = nebulaGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 繪製速度線
+            ctx.strokeStyle = 'rgba(0, 200, 255, 0.1)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < canvas.width; i += 30) {
+                const x = (i + Date.now() * 0.05) % canvas.width;
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvas.height);
                 ctx.stroke();
             }
-            
-            // 水平線
-            for (let y = 0; y < canvas.height; y += 40) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            
-            // 繪製分數效果
-            if (score > 0) {
-                ctx.fillStyle = `rgba(0, 255, 204, ${0.05 + (score % 100) / 2000})`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+        }
+        
+        // 更新顯示
+        function updateDisplay() {
+            scoreElement.textContent = score;
+            highScoreElement.textContent = highScore;
         }
         
         // 遊戲主循環
@@ -632,11 +1245,18 @@
             updateObstacles();
             drawObstacles();
             
+            // 更新和繪製道具
+            updatePowerups();
+            drawPowerups();
+            
             // 繪製玩家
             drawPlayer();
             
+            // 更新玩家旋轉（模擬飛行效果）
+            player.rotation = Math.sin(Date.now() * 0.005) * 0.1;
+            
             // 檢查碰撞
-            if (checkCollision()) {
+            if (checkPlayerCollision() && !powerupActive) {
                 gameOver();
                 return;
             }
@@ -651,25 +1271,38 @@
         const keys = {};
         
         window.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 's', 'S', 'a', 'A', 'd', 'D'].includes(e.key)) {
+                keys[e.key] = true;
+                e.preventDefault();
+            }
         });
         
         window.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 's', 'S', 'a', 'A', 'd', 'D'].includes(e.key)) {
+                keys[e.key] = false;
+                e.preventDefault();
+            }
         });
         
         function handlePlayerMovement() {
+            let speed = player.speed;
+            
+            // 快速移動（按住Shift）
+            if (keys['Shift']) {
+                speed *= 1.5;
+            }
+            
             if (keys['ArrowUp'] || keys['w'] || keys['W']) {
-                player.y -= player.speed;
+                player.y -= speed;
             }
             if (keys['ArrowDown'] || keys['s'] || keys['S']) {
-                player.y += player.speed;
+                player.y += speed;
             }
             if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
-                player.x -= player.speed;
+                player.x -= speed;
             }
             if (keys['ArrowRight'] || keys['d'] || keys['D']) {
-                player.x += player.speed;
+                player.x += speed;
             }
             
             // 確保玩家不會移出畫布
@@ -701,17 +1334,29 @@
         
         // 行動控制
         function setupMobileControls() {
-            // 按鈕按下
-            upBtn.addEventListener('touchstart', () => keys['ArrowUp'] = true);
-            downBtn.addEventListener('touchstart', () => keys['ArrowDown'] = true);
-            leftBtn.addEventListener('touchstart', () => keys['ArrowLeft'] = true);
-            rightBtn.addEventListener('touchstart', () => keys['ArrowRight'] = true);
+            const buttons = {
+                'ArrowUp': upBtn,
+                'ArrowDown': downBtn,
+                'ArrowLeft': leftBtn,
+                'ArrowRight': rightBtn
+            };
             
-            // 按鈕釋放
-            upBtn.addEventListener('touchend', () => keys['ArrowUp'] = false);
-            downBtn.addEventListener('touchend', () => keys['ArrowDown'] = false);
-            leftBtn.addEventListener('touchend', () => keys['ArrowLeft'] = false);
-            rightBtn.addEventListener('touchend', () => keys['ArrowRight'] = false);
+            Object.entries(buttons).forEach(([key, button]) => {
+                button.addEventListener('touchstart', (e) => {
+                    keys[key] = true;
+                    e.preventDefault();
+                });
+                
+                button.addEventListener('touchend', (e) => {
+                    keys[key] = false;
+                    e.preventDefault();
+                });
+                
+                // 為了桌面測試，也添加點擊事件
+                button.addEventListener('mousedown', () => keys[key] = true);
+                button.addEventListener('mouseup', () => keys[key] = false);
+                button.addEventListener('mouseleave', () => keys[key] = false);
+            });
             
             // 防止行動裝置上的滾動
             document.addEventListener('touchmove', (e) => {
@@ -721,25 +1366,34 @@
         
         // 初始化
         highScoreElement.textContent = highScore;
+        powerupElement.textContent = "0s";
         setupMobileControls();
+        
+        // 加載成就
+        Object.keys(unlockedAchievements).forEach(id => {
+            if (achievements[id]) {
+                achievements[id].unlocked = true;
+            }
+        });
         
         // 初始繪製
         drawBackground();
         drawPlayer();
         
         // 顯示遊戲說明
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(canvas.width/2 - 200, canvas.height/2 - 60, 400, 120);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(canvas.width/2 - 200, canvas.height/2 - 80, 400, 160);
         
         ctx.fillStyle = '#00ffcc';
-        ctx.font = '24px Arial';
+        ctx.font = '28px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('點擊「開始遊戲」按鈕開始', canvas.width/2, canvas.height/2 - 20);
+        ctx.fillText('⚡ 極限避障挑戰 ⚡', canvas.width/2, canvas.height/2 - 40);
         
         ctx.fillStyle = '#ffffff';
-        ctx.font = '16px Arial';
-        ctx.fillText('使用方向鍵控制方塊移動', canvas.width/2, canvas.height/2 + 20);
-        ctx.fillText('躲避紅色障礙物', canvas.width/2, canvas.height/2 + 50);
+        ctx.font = '18px Arial';
+        ctx.fillText('點擊「開始挑戰」按鈕開始', canvas.width/2, canvas.height/2);
+        ctx.fillText('收集道具，挑戰連擊記錄！', canvas.width/2, canvas.height/2 + 30);
+        ctx.fillText('你能達到多少連擊？', canvas.width/2, canvas.height/2 + 70);
     </script>
 </body>
 </html>
