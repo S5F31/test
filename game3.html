@@ -831,8 +831,54 @@
             to { opacity: 0; }
         }
     </style>
+    
+    <!-- 音效工具庫 -->
+    <script src="sound-utils.js"></script>
+    
+    <!-- 音效控制樣式 -->
+    <style>
+        .sound-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sound-btn {
+            background: rgba(30, 30, 40, 0.9);
+            color: #FFD700;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .sound-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .sound-btn.muted {
+            color: #ff5555;
+            border-color: #ff5555;
+        }
+    </style>
 </head>
 <body>
+    <!-- 音效控制 -->
+    <div class="sound-controls">
+        <button id="muteBtn" class="sound-btn" title="靜音/取消靜音">🔊</button>
+        <button id="volumeUpBtn" class="sound-btn" title="增加音量">➕</button>
+        <button id="volumeDownBtn" class="sound-btn" title="降低音量">➖</button>
+    </div>
 
     <!-- 開始畫面 -->
     <div id="startScreen" class="overlay-screen">
@@ -847,7 +893,7 @@
                     <button class="mode-btn" data-mode="boss_rush">Boss 連戰</button>
                 </div>
             </div>
-            <p style="color:#ddd; font-size:18px; margin-top:20px;">按下 <span class="blink">空白鍵</span> 開始</p>
+            <p style="color:#ddd; font-size:18px; margin-top:20px;">按 <span class="blink">任意鍵</span> 開始遊戲</p>
             <p style="color:#888; font-size:14px; margin-top:10px;">碰到其他飛刀扣血，碰到尖刺直接輸</p>
             <p style="color:#FFD700; font-size:14px; margin-top:5px;">目標：成功插滿飛刀即可過關</p>
             <button id="shopAccessBtn" class="btn" style="margin-top: 20px;">進入商店</button>
@@ -944,6 +990,150 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        // 音效系統
+        let soundManager = null;
+        let soundInitialized = false;
+        
+        // 初始化音效系統
+        async function initSoundSystem() {
+            // 載入音效工具庫
+            if (typeof SoundManager === 'undefined') {
+                console.warn('音效工具庫未載入，將使用簡單音效');
+                return;
+            }
+            
+            soundManager = new SoundManager('game3');
+            await soundManager.init();
+            
+            // 載入遊戲音效
+            const soundPromises = [];
+            
+            // UI 音效
+            soundPromises.push(soundManager.loadSound('click', 'assets/sounds/game3/click.mp3'));
+            soundPromises.push(soundManager.loadSound('select', 'assets/sounds/game3/select.mp3'));
+            soundPromises.push(soundManager.loadSound('start', 'assets/sounds/game3/start.mp3'));
+            
+            // 遊戲音效
+            soundPromises.push(soundManager.loadSound('throw', 'assets/sounds/game3/throw.mp3'));
+            soundPromises.push(soundManager.loadSound('hit', 'assets/sounds/game3/hit.mp3'));
+            soundPromises.push(soundManager.loadSound('perfect', 'assets/sounds/game3/perfect.mp3'));
+            soundPromises.push(soundManager.loadSound('collision', 'assets/sounds/game3/collision.mp3'));
+            soundPromises.push(soundManager.loadSound('levelup', 'assets/sounds/game3/levelup.mp3'));
+            soundPromises.push(soundManager.loadSound('gameover', 'assets/sounds/game3/gameover.mp3'));
+            soundPromises.push(soundManager.loadSound('coin', 'assets/sounds/game3/coin.mp3'));
+            
+            // 背景音樂
+            soundPromises.push(soundManager.loadSound('background', 'assets/sounds/game3/background.mp3'));
+            
+            // 等待所有音效載入
+            await Promise.allSettled(soundPromises);
+            console.log('音效系統初始化完成');
+            soundInitialized = true;
+            
+            // 設置音效控制
+            setupSoundControls();
+        }
+        
+        // 設置音效控制按鈕
+        function setupSoundControls() {
+            const muteBtn = document.getElementById('muteBtn');
+            const volumeUpBtn = document.getElementById('volumeUpBtn');
+            const volumeDownBtn = document.getElementById('volumeDownBtn');
+            
+            if (muteBtn && soundManager) {
+                muteBtn.addEventListener('click', () => {
+                    soundManager.toggleMute();
+                    muteBtn.classList.toggle('muted', soundManager.muted);
+                    muteBtn.textContent = soundManager.muted ? '🔇' : '🔊';
+                    playSound('click');
+                });
+            }
+            
+            if (volumeUpBtn && soundManager) {
+                volumeUpBtn.addEventListener('click', () => {
+                    soundManager.setVolume(Math.min(1.0, soundManager.volume + 0.1));
+                    playSound('click');
+                });
+            }
+            
+            if (volumeDownBtn && soundManager) {
+                volumeDownBtn.addEventListener('click', () => {
+                    soundManager.setVolume(Math.max(0, soundManager.volume - 0.1));
+                    playSound('click');
+                });
+            }
+        }
+        
+        // 播放音效的輔助函數
+        function playSound(name, options = {}) {
+            if (soundManager && soundInitialized) {
+                soundManager.play(name, options);
+            }
+        }
+        
+        // 修改開始畫面事件監聽器以支援任意鍵開始
+        function enhanceStartScreen() {
+            const startScreen = document.getElementById('startScreen');
+            
+            if (!startScreen) return;
+            
+            // 添加任意鍵開始功能
+            document.addEventListener('keydown', function startGameOnAnyKey(e) {
+                // 如果已經在遊戲中，不處理
+                if (window.gameState && window.gameState.playing) return;
+                
+                // 隱藏開始畫面
+                startScreen.style.display = 'none';
+                playSound('start');
+                
+                // 開始背景音樂
+                if (soundManager && soundInitialized) {
+                    soundManager.play('background', { loop: true, volume: 0.4 });
+                }
+                
+                // 移除事件監聽器
+                document.removeEventListener('keydown', startGameOnAnyKey);
+                
+                // 如果遊戲尚未開始，觸發模式選擇
+                const modeButtons = document.querySelectorAll('.mode-btn');
+                if (modeButtons.length > 0 && !window.gameState) {
+                    // 預設選擇經典模式
+                    setTimeout(() => {
+                        if (typeof selectMode === 'function') {
+                            selectMode('classic');
+                        }
+                    }, 300);
+                }
+            });
+            
+            // 點擊開始畫面也可以開始
+            startScreen.addEventListener('click', function() {
+                startScreen.style.display = 'none';
+                playSound('start');
+                
+                if (soundManager && soundInitialized) {
+                    soundManager.play('background', { loop: true, volume: 0.4 });
+                }
+                
+                document.removeEventListener('keydown', startGameOnAnyKey);
+                
+                const modeButtons = document.querySelectorAll('.mode-btn');
+                if (modeButtons.length > 0 && !window.gameState) {
+                    setTimeout(() => {
+                        if (typeof selectMode === 'function') {
+                            selectMode('classic');
+                        }
+                    }, 300);
+                }
+            });
+            
+            // 初始化音效系統
+            initSoundSystem();
+        }
+        
+        // 在DOM載入完成後增強開始畫面
+        document.addEventListener('DOMContentLoaded', enhanceStartScreen);
+        
         // 遊戲配置
         const CONFIG = {
             wheelRadius: 150,
