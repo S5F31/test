@@ -1940,6 +1940,7 @@
                 showScorePopup(50);
                 showToast("命中蘋果！+10金幣");
                 updateCoinsDisplay();
+                playSound('coin');
             } else if (hitBanana) {
                 hitBanana.el.remove();
                 state.objects = state.objects.filter(o => o !== hitBanana);
@@ -1948,12 +1949,20 @@
                 showScorePopup(30);
                 showToast("命中香蕉！+5金幣");
                 updateCoinsDisplay();
+                playSound('coin');
             } else {
                 // 成功插上飛刀！
                 state.knivesStuck++;
                 const scoreEarned = isPerfectHit ? 40 : 20;
                 state.score += scoreEarned * state.multiplier;
                 showScorePopup(scoreEarned);
+                
+                // 播放命中音效
+                if (isPerfectHit) {
+                    playSound('perfect');
+                } else {
+                    playSound('hit');
+                }
                 
                 // 創建新的飛刀固定在輪盤上
                 createObject('knife', hitAngle);

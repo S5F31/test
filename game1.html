@@ -508,6 +508,116 @@
             }
         }
     </style>
+    
+    <!-- 開始畫面樣式 -->
+    <style>
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #0f3460);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.8s ease;
+        }
+        
+        .start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .start-title {
+            background: linear-gradient(90deg, #00ffcc, #0099ff, #ff00ff, #ff9900);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+            letter-spacing: 4px;
+            animation: pulse 2s infinite;
+        }
+        
+        .start-subtitle {
+            color: #b0b0ff;
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: 300;
+        }
+        
+        .start-instruction {
+            color: #ffffff;
+            font-size: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            margin-top: 30px;
+            animation: blink 1.5s infinite;
+        }
+        
+        .start-instruction .key {
+            color: #00ffcc;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .sound-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sound-btn {
+            background: rgba(20, 20, 35, 0.9);
+            color: #00ffcc;
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .sound-btn:hover {
+            background: rgba(0, 200, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .sound-btn.muted {
+            color: #ff5555;
+            border-color: #ff5555;
+        }
+    </style>
+    
+    <!-- 音效工具庫 -->
+    <script src="sound-utils.js"></script>
 </head>
 <body>
     <div class="container">
@@ -594,6 +704,144 @@
     </div>
 
     <script>
+        // 音效系統
+        let soundManager = null;
+        let soundInitialized = false;
+        let gameStarted = false;
+        
+        // 初始化音效系統
+        async function initSoundSystem() {
+            // 載入音效工具庫
+            if (typeof SoundManager === 'undefined') {
+                console.warn('音效工具庫未載入，將使用簡單音效');
+                return;
+            }
+            
+            soundManager = new SoundManager('game1');
+            await soundManager.init();
+            
+            // 載入遊戲音效
+            const soundPromises = [];
+            
+            // UI 音效
+            soundPromises.push(soundManager.loadSound('click', 'assets/sounds/game1/click.mp3'));
+            soundPromises.push(soundManager.loadSound('select', 'assets/sounds/game1/select.mp3'));
+            soundPromises.push(soundManager.loadSound('start', 'assets/sounds/game1/start.mp3'));
+            
+            // 遊戲音效
+            soundPromises.push(soundManager.loadSound('score', 'assets/sounds/game1/score.mp3'));
+            soundPromises.push(soundManager.loadSound('combo', 'assets/sounds/game1/combo.mp3'));
+            soundPromises.push(soundManager.loadSound('powerup', 'assets/sounds/game1/powerup.mp3'));
+            soundPromises.push(soundManager.loadSound('collision', 'assets/sounds/game1/collision.mp3'));
+            soundPromises.push(soundManager.loadSound('gameover', 'assets/sounds/game1/gameover.mp3'));
+            soundPromises.push(soundManager.loadSound('achievement', 'assets/sounds/game1/achievement.mp3'));
+            
+            // 背景音樂
+            soundPromises.push(soundManager.loadSound('background', 'assets/sounds/game1/background.mp3'));
+            
+            // 等待所有音效載入
+            await Promise.allSettled(soundPromises);
+            console.log('音效系統初始化完成');
+            soundInitialized = true;
+            
+            // 設置音效控制
+            setupSoundControls();
+        }
+        
+        // 設置音效控制按鈕
+        function setupSoundControls() {
+            const muteBtn = document.getElementById('muteBtn');
+            const volumeUpBtn = document.getElementById('volumeUpBtn');
+            const volumeDownBtn = document.getElementById('volumeDownBtn');
+            
+            if (muteBtn && soundManager) {
+                muteBtn.addEventListener('click', () => {
+                    soundManager.toggleMute();
+                    muteBtn.classList.toggle('muted', soundManager.muted);
+                    muteBtn.textContent = soundManager.muted ? '🔇' : '🔊';
+                    playSound('click');
+                });
+            }
+            
+            if (volumeUpBtn && soundManager) {
+                volumeUpBtn.addEventListener('click', () => {
+                    soundManager.setVolume(Math.min(1.0, soundManager.volume + 0.1));
+                    playSound('click');
+                });
+            }
+            
+            if (volumeDownBtn && soundManager) {
+                volumeDownBtn.addEventListener('click', () => {
+                    soundManager.setVolume(Math.max(0, soundManager.volume - 0.1));
+                    playSound('click');
+                });
+            }
+        }
+        
+        // 播放音效的輔助函數
+        function playSound(name, options = {}) {
+            if (soundManager && soundInitialized) {
+                soundManager.play(name, options);
+            }
+        }
+        
+        // 開始畫面處理
+        function initStartScreen() {
+            const startScreen = document.getElementById('startScreen');
+            const startButton = document.querySelector('.start-btn');
+            
+            if (!startScreen) return;
+            
+            // 按任意鍵開始
+            document.addEventListener('keydown', function startGameOnKey(e) {
+                if (!gameStarted) {
+                    gameStarted = true;
+                    startScreen.classList.add('hidden');
+                    playSound('start');
+                    
+                    // 開始背景音樂
+                    if (soundManager && soundInitialized) {
+                        soundManager.play('background', { loop: true, volume: 0.3 });
+                    }
+                    
+                    // 移除事件監聽器
+                    document.removeEventListener('keydown', startGameOnKey);
+                    
+                    // 如果遊戲尚未開始，點擊開始按鈕
+                    if (startButton && typeof initGame === 'function') {
+                        setTimeout(() => {
+                            initGame();
+                        }, 500);
+                    }
+                }
+            });
+            
+            // 點擊開始畫面也可以開始
+            startScreen.addEventListener('click', function() {
+                if (!gameStarted) {
+                    gameStarted = true;
+                    startScreen.classList.add('hidden');
+                    playSound('start');
+                    
+                    if (soundManager && soundInitialized) {
+                        soundManager.play('background', { loop: true, volume: 0.3 });
+                    }
+                    
+                    if (startButton && typeof initGame === 'function') {
+                        setTimeout(() => {
+                            initGame();
+                        }, 500);
+                    }
+                }
+            });
+            
+            // 初始化音效系統
+            initSoundSystem();
+        }
+        
+        // 在DOM載入完成後初始化開始畫面
+        document.addEventListener('DOMContentLoaded', initStartScreen);
+        
         // 遊戲變數
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
