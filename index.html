@@ -1,45 +1,344 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的遊戲館</title>
-    <style>
+<html class="dark" lang="zh-HK"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>S5F31 遊戲指揮中心 - 極限遊戲館</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00ffcc",
+                        "navy-deep": "#1a1a2e",
+                        "bg-dark": "#05050a",
+                        "neon-green": "#39ff14",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "orbitron": ["Orbitron", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "lg": "16px",
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        @keyframes grid-move {
+            0% { transform: perspective(500px) rotateX(20deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(20deg) translateY(30px); }
+        }
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
         body {
-            font-family: Arial, sans-serif;
-            background: #1a1a2e;
+            background-color: #05050a;
             color: white;
-            text-align: center;
-            padding: 40px;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        h1 { margin-bottom: 30px; }
-        .games { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-        .game-card {
-            background: #2d2d44;
-            padding: 25px 35px;
-            border-radius: 10px;
+        .system-boot-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #00ffcc;
+            box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+            z-index: 9999;
+            animation: scanline 4s linear infinite;
+        }
+        .grid-background {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 204, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 204, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: grid-move 3s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .neon-border {
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+        .neon-blue-border {
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.1);
+        }
+        .neon-glow-text {
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.6);
+        }
+        .typewriter-text {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid #00ffcc;
+            animation: typewriter 3s steps(40, end), blink .75s step-end infinite;
+        }
+        .glass-panel {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .stats-ring {
+            background: conic-gradient(#00ffcc var(--percent), #1a1a2e 0);
+        }
+        .hover-lift {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 255, 204, 0.2);
+        }
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ffcc;
+            border-radius: 50%;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #00ffcc;
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        .game-link {
+            display: inline-block;
             text-decoration: none;
-            color: white;
-            transition: 0.3s;
+            cursor: pointer;
         }
-        .game-card:hover { background: #3d3d5c; transform: scale(1.05); }
-        .icon { font-size: 2em; }
+        .game-link:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
+        }
     </style>
-</head>
-<body>
-    <h1>🎮 我的遊戲館</h1>
-    <div class="games">
-        <a href="game1.html" class="game-card">
-            <div class="icon">✊</div>
-            <div>避障遊戲</div>
-        </a>
-        <a href="game2.html" class="game-card">
-            <div class="icon">✊</div>
-            <div>液體顔色分類遊戲</div>
-        </a>
-        <a href="game3.html" class="game-card">
-            <div class="icon">🎯</div>
-            <div>Ninja飛刀大挑戰 - 完整版</div>
-    </div>
-</body>
-</html>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+  </head>
+<body class="font-display">
+<div class="system-boot-line"></div>
+<div class="grid-background"></div>
+<header class="relative z-10 w-full">
+<div class="relative w-full aspect-[4/3] bg-navy-deep overflow-hidden border-b border-primary/30">
+<div class="absolute inset-0">
+<div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBKXXPC1HQdhZtLTiTPk4H5mFzFXRxnzGYYhY6qwdFb_JqX889gmDx39vcmhhN1OHtDA8OyNdNioueXmMGYAQCV9J64lHCF0O26EfOQ5RJa0V0BX5P7qeJ4wugBo5yY_hTX6xZlnbDn9rit6NgBhX50SxSs-k3XACPX4xaInGx2MWq0nfsMLMuRKA_n05RVFrT2gY2dAnL1YFdko8i7GTabaUQxsvF3vY727z43VEkq7ODo5Go469AUzJ-ZQgWzzusVL6jgYglfOvo')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-bg-dark via-transparent to-transparent"></div>
+<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+<div class="mb-2">
+<span class="text-7xl drop-shadow-[0_0_15px_rgba(0,255,204,0.5)]">🚀</span>
+</div>
+<h1 class="font-orbitron text-3xl font-black text-primary neon-glow-text tracking-tighter uppercase leading-none mb-2">
+                        S5F31 遊戲指揮中心
+                    </h1>
+<div class="h-6">
+<span class="font-orbitron text-xs text-primary/80 typewriter-text uppercase tracking-widest">
+                            極限遊戲體驗 - 準備挑戰
+                        </span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+<div class="w-8 h-1 bg-primary rounded-full"></div>
+<div class="w-2 h-1 bg-primary/30 rounded-full"></div>
+<div class="w-2 h-1 bg-primary/30 rounded-full"></div>
+</div>
+</div>
+</header>
+<main class="relative z-10 px-4 pt-6 pb-40 space-y-8">
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h2 class="font-orbitron text-sm font-bold text-primary tracking-widest uppercase flex items-center gap-2">
+<span class="w-1 h-4 bg-primary inline-block"></span>
+                    指揮中心數據
+                </h2>
+<span class="text-[10px] text-primary/50 font-orbitron">SYSTEM_STABLE_V4.2</span>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<div class="glass-panel neon-border rounded-lg p-3 flex flex-col items-center justify-center space-y-2">
+<div class="relative w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center">
+<div class="absolute inset-0 stats-ring rounded-full opacity-60" style="--percent: 42%;"></div>
+<div class="absolute inset-[3px] bg-navy-deep rounded-full flex items-center justify-center">
+<span class="text-xs font-bold text-primary font-orbitron">42</span>
+</div>
+</div>
+<div class="text-center">
+<div class="text-[8px] uppercase text-primary/60 font-orbitron tracking-tighter">總遊戲時間</div>
+<div class="text-[10px] font-bold text-white">42小時</div>
+</div>
+</div>
+<div class="glass-panel neon-border rounded-lg p-3 flex flex-col items-center justify-center space-y-2">
+<div class="relative w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center">
+<div class="absolute inset-0 stats-ring rounded-full opacity-60" style="--percent: 85%;"></div>
+<div class="absolute inset-[3px] bg-navy-deep rounded-full flex items-center justify-center">
+<span class="text-xs font-bold text-primary font-orbitron">85</span>
+</div>
+</div>
+<div class="text-center">
+<div class="text-[8px] uppercase text-primary/60 font-orbitron tracking-tighter">通關率</div>
+<div class="text-[10px] font-bold text-white">前5%玩家</div>
+</div>
+</div>
+<div class="glass-panel neon-border rounded-lg p-3 flex flex-col items-center justify-center space-y-2">
+<div class="relative w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center">
+<div class="absolute inset-0 stats-ring rounded-full opacity-60" style="--percent: 25%;"></div>
+<div class="absolute inset-[3px] bg-navy-deep rounded-full flex items-center justify-center">
+<span class="text-xs font-bold text-primary font-orbitron">12</span>
+</div>
+</div>
+<div class="text-center">
+<div class="text-[8px] uppercase text-primary/60 font-orbitron tracking-tighter">成就獎盃</div>
+<div class="text-[10px] font-bold text-white">12/48</div>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h2 class="font-orbitron text-sm font-bold text-primary tracking-widest uppercase flex items-center gap-2">
+<span class="w-1 h-4 bg-primary inline-block"></span>
+                協議遊戲
+            </h2>
+<div class="grid grid-cols-1 gap-4">
+<!-- 遊戲1: 極限避障挑戰 -->
+<div class="relative glass-panel rounded-lg neon-border p-4 hover-lift overflow-hidden group">
+<div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBKXXPC1HQdhZtLTiTPk4H5mFzFXRxnzGYYhY6qwdFb_JqX889gmDx39vcmhhN1OHtDA8OyNdNioueXmMGYAQCV9J64lHCF0O26EfOQ5RJa0V0BX5P7qeJ4wugBo5yY_hTX6xZlnbDn9rit6NgBhX50SxSs-k3XACPX4xaInGx2MWq0nfsMLMuRKA_n05RVFrT2gY2dAnL1YFdko8i7GTabaUQxsvF3vY727z43VEkq7ODo5Go469AUzJ-ZQgWzzusVL6jgYglfOvo')"></div>
+<div class="relative z-10 flex items-center gap-4">
+<div class="w-16 h-16 bg-navy-deep rounded-lg flex items-center justify-center border border-primary/30 shadow-[0_0_15px_rgba(0,255,204,0.2)]">
+<span class="text-3xl">🚀</span>
+</div>
+<div class="flex-1">
+<h3 class="font-orbitron text-sm font-bold text-white uppercase tracking-tight">極限避障挑戰</h3>
+<p class="text-[10px] text-white/50 font-display">神經反射測試模擬</p>
+</div>
+<a href="game1.html" class="game-link bg-primary text-navy-deep font-orbitron text-[10px] font-black px-4 py-2 rounded uppercase shadow-[0_0_10px_#00ffcc] hover:shadow-[0_0_15px_#00ffcc] transition-shadow">
+                            開始遊戲
+                        </a>
+</div>
+</div>
+
+<!-- 遊戲2: 試管液體自由分類 -->
+<div class="relative glass-panel rounded-lg neon-border p-4 overflow-hidden group">
+<div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(rgba(0, 255, 204, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 204, 0.2) 1px, transparent 1px); background-size: 8px 8px;"></div>
+<div class="relative z-10 flex items-center gap-4">
+<div class="w-16 h-16 bg-navy-deep rounded-lg flex items-center justify-center border border-primary/30">
+<span class="text-3xl">🧪</span>
+</div>
+<div class="flex-1">
+<h3 class="font-orbitron text-sm font-bold text-white uppercase tracking-tight">試管液體自由分類</h3>
+<p class="text-[10px] text-white/50 font-display">分子排列協議</p>
+</div>
+<a href="game2.html" class="game-link border border-primary text-primary font-orbitron text-[10px] font-black px-4 py-2 rounded uppercase hover:bg-primary/10 transition-colors">
+                            開始遊戲
+                        </a>
+</div>
+</div>
+
+<!-- 遊戲3: Ninja飛刀大挑戰 -->
+<div class="relative glass-panel rounded-lg neon-border p-4 overflow-hidden group">
+<div class="absolute inset-0 opacity-10 bg-cover bg-center grayscale contrast-200" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC3-1rVHmmJ1Yaxwk4WBIw-CqcDuz__fdHX327185xEGBuILMS-tzFTVhe2DkXqiQFRD1t2TbgcLpjJ8yRPMaPVHL7EbhnGCgyEup1Hcac3m12J4twdv_nNY1CfzitFCLeh5EVgkKMTqxaDgZz8yqALnCcWCaoSXhwNRBvx3eaWojronOvr3-8rAjCEDRFlXxeCJ_22rCC0-49PcsIjg97yh8c-GgguWk56hEfS6SyZdDwksia1n7fpGrkBcs3M6T1LbsmXWN7QspU')"></div>
+<div class="relative z-10 flex items-center gap-4">
+<div class="w-16 h-16 bg-navy-deep rounded-lg flex items-center justify-center border border-primary/30">
+<span class="text-3xl">⚔️</span>
+</div>
+<div class="flex-1">
+<h3 class="font-orbitron text-sm font-bold text-white uppercase tracking-tight">Ninja飛刀大挑戰</h3>
+<p class="text-[10px] text-white/50 font-display">賽博刀鋒精準訓練</p>
+</div>
+<a href="game3.html" class="game-link border border-primary text-primary font-orbitron text-[10px] font-black px-4 py-2 rounded uppercase hover:bg-primary/10 transition-colors">
+                            開始遊戲
+                        </a>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h2 class="font-orbitron text-sm font-bold text-primary tracking-widest uppercase flex items-center gap-2">
+<span class="w-1 h-4 bg-primary inline-block"></span>
+                系統更新日誌
+            </h2>
+<div class="glass-panel neon-blue-border rounded-lg p-4 font-display">
+<ul class="space-y-4 text-[11px] leading-relaxed">
+<li class="flex flex-col gap-1 border-l-2 border-neon-green/30 pl-3">
+<div class="flex items-center gap-2">
+<span class="bg-neon-green text-bg-dark font-orbitron px-1.5 py-0.5 text-[9px] font-black rounded-sm">v1.0.5</span>
+<span class="text-primary/70 font-orbitron text-[9px]">2026年2月20日</span>
+</div>
+<div class="text-primary/50 text-[10px]">
+                            新增遊戲3：Ninja飛刀大挑戰，優化遊戲性能
+                        </div>
+</li>
+<li class="flex flex-col gap-1 border-l-2 border-white/10 pl-3">
+<div class="flex items-center gap-2">
+<span class="bg-neon-green/40 text-white font-orbitron px-1.5 py-0.5 text-[9px] font-black rounded-sm">v1.0.2</span>
+<span class="text-white/40 font-orbitron text-[9px]">2026年2月15日</span>
+</div>
+<div class="text-white/60">
+                            修復試管液體物理引擎
+                        </div>
+</li>
+<li class="flex flex-col gap-1 border-l-2 border-white/10 pl-3">
+<div class="flex items-center gap-2">
+<span class="bg-neon-green/40 text-white font-orbitron px-1.5 py-0.5 text-[9px] font-black rounded-sm">v1.0.0</span>
+<span class="text-white/40 font-orbitron text-[9px]">2026年2月1日</span>
+</div>
+<div class="text-white/60">
+                            S5F31 遊戲指揮中心正式上線
+                        </div>
+</li>
+</ul>
+</div>
+<div class="text-center pt-4">
+<span class="font-orbitron text-[9px] text-primary/40 uppercase tracking-[0.2em]">使用霓虹能量驅動</span>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-primary/30 px-6 pt-3 pb-8">
+<div class="max-w-md mx-auto flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-primary neon-glow-text">home</span>
+<span class="text-[9px] font-orbitron font-bold text-primary uppercase">首頁</span>
+</a>
+<a class="flex flex-col items-center gap-1 opacity-40 group hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-white">inventory_2</span>
+<span class="text-[9px] font-orbitron font-bold text-white uppercase">倉庫</span>
+</a>
+<a class="flex flex-col items-center gap-1 opacity-40 group hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-white">trophy</span>
+<span class="text-[9px] font-orbitron font-bold text-white uppercase">排名</span>
+</a>
+<a class="flex flex-col items-center gap-1 opacity-40 group hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-white">settings_input_component</span>
+<span class="text-[9px] font-orbitron font-bold text-white uppercase">系統</span>
+</a>
+</div>
+</nav>
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="particle" style="top: 15%; left: 20%;"></div>
+<div class="particle" style="top: 45%; left: 80%;"></div>
+<div class="particle" style="top: 75%; left: 15%;"></div>
+<div class="particle" style="top: 30%; left: 50%;"></div>
+<div class="particle" style="top: 85%; left: 90%;"></div>
+</div>
+
+</body></html>
